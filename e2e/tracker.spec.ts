@@ -11,6 +11,7 @@ test('confirms measurements and notes before saving records', async ({ page }, t
   await page.getByRole('button', { name: '记录喝水', exact: true }).click()
   await expect(page.getByRole('heading', { name: '记录喝水' })).toBeVisible()
   await expect(page.getByLabel('计量')).toHaveValue('250')
+  await expect(page.getByLabel('计量')).not.toBeFocused()
   await expect(recentSection.getByText('喝水', { exact: true })).toHaveCount(0)
   await page.getByLabel('计量').fill('300')
   await page.getByLabel('备注（可选）').fill('早餐后喝的温水')
