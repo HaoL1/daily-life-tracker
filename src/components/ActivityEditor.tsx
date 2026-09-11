@@ -70,7 +70,7 @@ export function ActivityEditor({ activity, onClose, onSaved }: ActivityEditorPro
       <form className="form-stack" onSubmit={handleSubmit}>
         <label className="field">
           <span>名称</span>
-          <input autoFocus required maxLength={20} value={name} onChange={(event) => setName(event.target.value)} />
+          <input required maxLength={20} value={name} onChange={(event) => setName(event.target.value)} />
         </label>
         <div className="field-row">
           <label className="field field-grow">

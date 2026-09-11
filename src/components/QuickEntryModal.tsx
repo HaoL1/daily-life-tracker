@@ -78,7 +78,6 @@ export function QuickEntryModal({
           <label className="field field-grow">
             <span>计量</span>
             <input
-              autoFocus
               inputMode="decimal"
               required
               value={amount}

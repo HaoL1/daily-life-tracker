@@ -456,20 +456,48 @@ input:disabled, select:disabled { background: var(--cp-surface-soft); color: var
 .modal-backdrop {
   position: fixed;
   z-index: 100;
-  inset: 0;
+  top: var(--modal-viewport-top, 0px);
+  right: 0;
+  left: 0;
   display: flex;
+  height: var(--modal-viewport-height, 100dvh);
   padding: 24px max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
   align-items: flex-end;
   justify-content: center;
+  overflow: hidden;
   background: var(--cp-overlay);
   backdrop-filter: blur(7px);
 }
-.modal-sheet { width: min(100%, 560px); max-height: min(88svh, 760px); overflow: hidden; border: 1px solid var(--cp-border); border-radius: 16px 16px 8px 8px; background: var(--cp-surface); box-shadow: var(--cp-shadow); animation: sheet-in 220ms ease-out both; }
+.modal-backdrop[data-keyboard-open="true"] {
+  padding-top: max(8px, env(safe-area-inset-top));
+  padding-bottom: 8px;
+  align-items: flex-start;
+}
+.modal-sheet {
+  display: flex;
+  width: min(100%, 560px);
+  max-height: min(calc(var(--modal-viewport-height, 100dvh) - 36px), 760px);
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid var(--cp-border);
+  border-radius: 16px 16px 8px 8px;
+  background: var(--cp-surface);
+  box-shadow: var(--cp-shadow);
+  animation: sheet-in 220ms ease-out both;
+}
 @keyframes sheet-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 .modal-header { display: flex; padding: 18px 18px 14px; align-items: flex-start; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--cp-border); }
 .modal-header h2 { font-size: 19px; }
 .modal-header p { margin-top: 4px; color: var(--cp-text-muted); font-size: 12px; }
-.modal-content { max-height: calc(88svh - 84px); padding: 18px; overflow-y: auto; overscroll-behavior: contain; }
+.modal-content {
+  min-height: 0;
+  padding: 18px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-bottom: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+.modal-open .bottom-nav { visibility: hidden; }
 .form-stack { display: grid; gap: 15px; }
 .quick-entry-summary {
   display: flex;
