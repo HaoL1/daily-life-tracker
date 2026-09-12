@@ -17,6 +17,7 @@ const iconToneFallback: Partial<Record<ActivityRecord['activityIcon'], string>> 
   snack: 'warning',
   fruit: 'success',
   exercise: 'danger',
+  walk: 'success',
   drive: 'warning',
   coffee: 'warning',
 }
@@ -32,7 +33,7 @@ export function HistoryPage({ notify }: HistoryPageProps) {
   const activities = useLiveQuery(() => db.activities.orderBy('sortOrder').toArray(), [], [])
   const [activityFilter, setActivityFilter] = useState('all')
   const [dateFilter, setDateFilter] = useState('')
-  const [sortOrder, setSortOrder] = useState<HistorySortOrder>('ascending')
+  const [sortOrder, setSortOrder] = useState<HistorySortOrder>('descending')
   const [editor, setEditor] = useState<{ record?: ActivityRecord } | null>(null)
 
   const filteredRecords = records.filter((record) => {

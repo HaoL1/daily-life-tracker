@@ -9,6 +9,7 @@ export type ActivityIcon =
   | 'snack'
   | 'fruit'
   | 'exercise'
+  | 'walk'
   | 'drive'
   | 'custom'
 

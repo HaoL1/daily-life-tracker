@@ -6,6 +6,7 @@ import {
   CupSoda,
   Droplets,
   Dumbbell,
+  PersonStanding,
   Sparkles,
   Toilet,
   Utensils,
@@ -21,6 +22,7 @@ const iconMap = {
   snack: Cookie,
   fruit: Apple,
   exercise: Dumbbell,
+  walk: PersonStanding,
   drive: CarFront,
   custom: Sparkles,
 }

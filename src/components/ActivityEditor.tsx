@@ -17,6 +17,7 @@ const iconOptions: Array<{ value: ActivityIcon; label: string }> = [
   { value: 'snack', label: '零食' },
   { value: 'fruit', label: '水果' },
   { value: 'exercise', label: '锻炼' },
+  { value: 'walk', label: '散步' },
   { value: 'drive', label: '汽车' },
   { value: 'custom', label: '其他' },
 ]
