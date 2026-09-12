@@ -12,17 +12,48 @@ interface ModalProps {
 export function Modal({ title, description, children, onClose }: ModalProps) {
   const backdropRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
     const backdrop = backdropRef.current
     const visualViewport = window.visualViewport
     const scrollPosition = window.scrollY
+    let focusFrame = 0
     const originalBodyStyles = {
       position: document.body.style.position,
       top: document.body.style.top,
       right: document.body.style.right,
       left: document.body.style.left,
       overflow: document.body.style.overflow,
+    }
+
+    function keepFocusedFieldVisible() {
+      const content = contentRef.current
+      const activeElement = document.activeElement
+      if (!content || !(activeElement instanceof HTMLElement) || !content.contains(activeElement)) return
+
+      const contentBounds = content.getBoundingClientRect()
+      const fieldBounds = activeElement.getBoundingClientRect()
+      const margin = 12
+
+      if (fieldBounds.bottom > contentBounds.bottom - margin) {
+        content.scrollBy({
+          top: fieldBounds.bottom - contentBounds.bottom + margin,
+          behavior: 'smooth',
+        })
+      } else if (fieldBounds.top < contentBounds.top + margin) {
+        content.scrollBy({
+          top: fieldBounds.top - contentBounds.top - margin,
+          behavior: 'smooth',
+        })
+      }
+    }
+
+    function scheduleFocusedFieldVisibility() {
+      window.cancelAnimationFrame(focusFrame)
+      focusFrame = window.requestAnimationFrame(() => {
+        focusFrame = window.requestAnimationFrame(keepFocusedFieldVisible)
+      })
     }
 
     function syncViewport() {
@@ -34,6 +65,7 @@ export function Modal({ title, description, children, onClose }: ModalProps) {
       backdrop.style.setProperty('--modal-viewport-height', `${Math.round(viewportHeight)}px`)
       backdrop.style.setProperty('--modal-viewport-top', `${Math.round(viewportTop)}px`)
       backdrop.dataset.keyboardOpen = keyboardOpen ? 'true' : 'false'
+      scheduleFocusedFieldVisibility()
     }
 
     document.body.classList.add('modal-open')
@@ -48,11 +80,14 @@ export function Modal({ title, description, children, onClose }: ModalProps) {
     visualViewport?.addEventListener('resize', syncViewport)
     visualViewport?.addEventListener('scroll', syncViewport)
     window.addEventListener('resize', syncViewport)
+    backdrop?.addEventListener('focusin', scheduleFocusedFieldVisibility)
 
     return () => {
+      window.cancelAnimationFrame(focusFrame)
       visualViewport?.removeEventListener('resize', syncViewport)
       visualViewport?.removeEventListener('scroll', syncViewport)
       window.removeEventListener('resize', syncViewport)
+      backdrop?.removeEventListener('focusin', scheduleFocusedFieldVisibility)
       document.body.classList.remove('modal-open')
       document.body.style.position = originalBodyStyles.position
       document.body.style.top = originalBodyStyles.top
@@ -89,7 +124,7 @@ export function Modal({ title, description, children, onClose }: ModalProps) {
             <X size={21} />
           </button>
         </header>
-        <div className="modal-content">{children}</div>
+        <div ref={contentRef} className="modal-content">{children}</div>
       </section>
     </div>,
     document.body,

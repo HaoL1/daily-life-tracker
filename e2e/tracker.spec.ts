@@ -5,6 +5,31 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByRole('heading', { name: '今天，记一下' })).toBeVisible()
 })
 
+test('keeps the backfill note visible above the mobile keyboard', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.getByRole('button', { name: '补录' }).click()
+
+  const dialog = page.getByRole('dialog')
+  const initialDialogBox = await dialog.boundingBox()
+  expect(initialDialogBox?.y).toBeLessThanOrEqual(24)
+
+  await page.setViewportSize({ width: 390, height: 430 })
+  const note = page.getByLabel('备注（可选）')
+  await note.focus()
+  await expect(note).toBeFocused()
+
+  await expect.poll(async () => {
+    const noteBox = await note.boundingBox()
+    const contentBox = await page.locator('.modal-content').boundingBox()
+    if (!noteBox || !contentBox) return false
+    return noteBox.y >= contentBox.y && noteBox.y + noteBox.height <= contentBox.y + contentBox.height
+  }).toBe(true)
+
+  const compactDialogBox = await dialog.boundingBox()
+  expect(compactDialogBox?.y).toBeLessThanOrEqual(16)
+  expect((compactDialogBox?.y ?? 0) + (compactDialogBox?.height ?? 0)).toBeLessThanOrEqual(430)
+})
+
 test('confirms measurements and notes before saving records', async ({ page }, testInfo) => {
   const recentSection = page.locator('section[aria-labelledby="recent-title"]')
 

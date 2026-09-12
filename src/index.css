@@ -517,8 +517,8 @@ input:disabled, select:disabled { background: var(--cp-surface-soft); color: var
   left: 0;
   display: flex;
   height: var(--modal-viewport-height, 100dvh);
-  padding: 24px max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
-  align-items: flex-end;
+  padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  align-items: flex-start;
   justify-content: center;
   overflow: hidden;
   background: var(--cp-overlay);
