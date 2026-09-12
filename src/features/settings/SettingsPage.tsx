@@ -3,6 +3,7 @@ import {
   HardDrive,
   Pencil,
   Plus,
+  RotateCcw,
   ShieldCheck,
   Smartphone,
   Trash2,
@@ -12,7 +13,11 @@ import { ActivityEditor } from '../../components/ActivityEditor'
 import { db } from '../../db/database'
 import type { ActivityDefinition } from '../../domain/models'
 import type { Notify } from '../../domain/ui'
-import { deleteActivity } from '../../services/activityService'
+import {
+  deleteActivity,
+  permanentlyDeleteActivity,
+  restoreActivity,
+} from '../../services/activityService'
 import { requestPersistentStorage, type StorageStatus } from '../../services/storageService'
 import { DataExportPanel } from './DataExportPanel'
 
@@ -26,6 +31,7 @@ export function SettingsPage({ notify }: SettingsPageProps) {
   const [editor, setEditor] = useState<ActivityDefinition | 'new' | null>(null)
   const [storage, setStorage] = useState<StorageStatus | null>(null)
   const visible = activities.filter((activity) => !activity.isArchived)
+  const deleted = activities.filter((activity) => activity.isArchived)
 
   useEffect(() => {
     void requestPersistentStorage().then(setStorage).catch(() => {
@@ -43,6 +49,30 @@ export function SettingsPage({ notify }: SettingsPageProps) {
     try {
       await deleteActivity(activity.id)
       notify(`“${activity.name}”已删除，历史记录仍会保留`)
+    } catch (caught) {
+      notify(caught instanceof Error ? caught.message : '操作失败，请重试')
+    }
+  }
+
+  async function restore(activity: ActivityDefinition) {
+    try {
+      await restoreActivity(activity.id)
+      notify(`“${activity.name}”已恢复到首页`)
+    } catch (caught) {
+      notify(caught instanceof Error ? caught.message : '操作失败，请重试')
+    }
+  }
+
+  async function removeForever(activity: ActivityDefinition) {
+    const recordCount = await db.records.where('activityId').equals(activity.id).count()
+    const historyMessage = recordCount
+      ? `已有 ${recordCount} 条历史记录会继续保留，但这个行为将无法恢复。`
+      : '这个行为还没有历史记录，删除后也无法恢复。'
+    if (!window.confirm(`永久删除“${activity.name}”？\n\n${historyMessage}`)) return
+
+    try {
+      await permanentlyDeleteActivity(activity.id)
+      notify(`“${activity.name}”已永久删除`)
     } catch (caught) {
       notify(caught instanceof Error ? caught.message : '操作失败，请重试')
     }
@@ -85,6 +115,53 @@ export function SettingsPage({ notify }: SettingsPageProps) {
             )
           })}
         </div>
+      </section>
+
+      <section className="settings-section" aria-labelledby="deleted-activities-title">
+        <div className="section-heading">
+          <div>
+            <p className="section-kicker">误删恢复</p>
+            <h2 id="deleted-activities-title">已删除</h2>
+          </div>
+          <span className="section-count">{deleted.length} 项</span>
+        </div>
+        {deleted.length ? (
+          <div className="activity-settings-list">
+            {deleted.map((activity) => (
+              <article className="activity-setting-row" key={activity.id}>
+                <span className={`activity-setting-marker tone-${activity.tone}`} aria-hidden="true" />
+                <div className="activity-setting-copy">
+                  <strong>{activity.name}</strong>
+                  <span>可恢复到首页，也可永久删除</span>
+                </div>
+                <div className="row-actions settings-row-actions">
+                  <button
+                    className="icon-button small-icon-button"
+                    type="button"
+                    onClick={() => void restore(activity)}
+                    aria-label={`恢复${activity.name}`}
+                    title="恢复"
+                  >
+                    <RotateCcw size={17} />
+                  </button>
+                  <button
+                    className="icon-button small-icon-button danger-button"
+                    type="button"
+                    onClick={() => void removeForever(activity)}
+                    aria-label={`永久删除${activity.name}`}
+                    title="永久删除"
+                  >
+                    <Trash2 size={17} />
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state quiet-empty">
+            <p>还没有已删除行为</p>
+          </div>
+        )}
       </section>
 
       <DataExportPanel notify={notify} />

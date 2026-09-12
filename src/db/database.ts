@@ -37,24 +37,39 @@ export async function initializeDatabase(): Promise<void> {
 
     const existingActivities = await db.activities.toArray()
     const deletedActivityIds = new Set(settings.deletedActivityIds ?? [])
-    const previouslyArchivedIds = existingActivities
+    const permanentlyDeletedActivityIds = new Set(settings.permanentlyDeletedActivityIds ?? [])
+    const archivedIds = existingActivities
       .filter((activity) => activity.isArchived)
       .map((activity) => activity.id)
 
-    if (previouslyArchivedIds.length > 0) {
-      previouslyArchivedIds.forEach((id) => deletedActivityIds.add(id))
-      await db.activities.bulkDelete(previouslyArchivedIds)
+    if (archivedIds.length > 0) {
+      archivedIds.forEach((id) => deletedActivityIds.add(id))
       settings = {
         ...settings,
         deletedActivityIds: [...deletedActivityIds],
+        permanentlyDeletedActivityIds: [...permanentlyDeletedActivityIds],
         updatedAt: new Date().toISOString(),
       }
       await db.settings.put(settings)
     }
 
     if (existingActivities.length === 0) {
-      const availableDefaults = defaults.filter((activity) => !deletedActivityIds.has(activity.id))
-      if (availableDefaults.length > 0) await db.activities.bulkAdd(availableDefaults)
+      const deletedDefaults = defaults
+        .filter((activity) => deletedActivityIds.has(activity.id) && !permanentlyDeletedActivityIds.has(activity.id))
+        .map((activity, index) => ({ ...activity, isArchived: true, sortOrder: index }))
+      if (deletedDefaults.length > 0) await db.activities.bulkAdd(deletedDefaults)
+      const availableDefaults = defaults.filter(
+        (activity) =>
+          !deletedActivityIds.has(activity.id) && !permanentlyDeletedActivityIds.has(activity.id),
+      )
+      if (availableDefaults.length > 0) {
+        await db.activities.bulkAdd(
+          availableDefaults.map((activity, index) => ({
+            ...activity,
+            sortOrder: deletedDefaults.length + index,
+          })),
+        )
+      }
     } else {
       const defaultRenames = [
         { id: 'preset-toilet', previousNames: ['上厕所', '小手'], name: '小便' },
@@ -72,8 +87,28 @@ export async function initializeDatabase(): Promise<void> {
 
       const existingIds = new Set(existingActivities.map((activity) => activity.id))
       let nextSortOrder = Math.max(...existingActivities.map((activity) => activity.sortOrder)) + 1
+      const missingDeletedDefaults = defaults
+        .filter(
+          (activity) =>
+            deletedActivityIds.has(activity.id) &&
+            !permanentlyDeletedActivityIds.has(activity.id) &&
+            !existingIds.has(activity.id),
+        )
+        .map((activity) => ({
+          ...activity,
+          isArchived: true,
+          sortOrder: nextSortOrder++,
+        }))
+      if (missingDeletedDefaults.length > 0) {
+        await db.activities.bulkAdd(missingDeletedDefaults)
+      }
       const missingDefaults = defaults
-        .filter((activity) => !existingIds.has(activity.id) && !deletedActivityIds.has(activity.id))
+        .filter(
+          (activity) =>
+            !existingIds.has(activity.id) &&
+            !deletedActivityIds.has(activity.id) &&
+            !permanentlyDeletedActivityIds.has(activity.id),
+        )
         .map((activity) => ({ ...activity, sortOrder: nextSortOrder++ }))
       if (missingDefaults.length > 0) {
         await db.activities.bulkAdd(missingDefaults)

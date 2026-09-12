@@ -71,8 +71,62 @@ export async function deleteActivity(id: string): Promise<void> {
     if (!activity) throw new Error('没有找到这个行为')
 
     const settings = await db.settings.get('app')
+    await db.activities.update(id, {
+      isArchived: true,
+      updatedAt: new Date().toISOString(),
+    })
+    await db.settings.put({
+      ...(settings ?? {
+        id: 'app' as const,
+        weekStartsOn: 1 as const,
+        createdAt: new Date().toISOString(),
+      }),
+      deletedActivityIds: [...new Set([...(settings?.deletedActivityIds ?? []), id])],
+      updatedAt: new Date().toISOString(),
+    })
+  })
+}
+
+export async function restoreActivity(id: string): Promise<void> {
+  await db.transaction('rw', db.activities, db.settings, async () => {
+    const activity = await db.activities.get(id)
+    if (!activity) throw new Error('没有找到这个行为')
+
+    const settings = await db.settings.get('app')
     const deletedActivityIds = new Set(settings?.deletedActivityIds ?? [])
-    deletedActivityIds.add(id)
+    const permanentlyDeletedActivityIds = new Set(settings?.permanentlyDeletedActivityIds ?? [])
+    deletedActivityIds.delete(id)
+    permanentlyDeletedActivityIds.delete(id)
+    await db.activities.update(id, {
+      isArchived: false,
+      updatedAt: new Date().toISOString(),
+    })
+    await db.settings.put({
+      ...(settings ?? {
+        id: 'app' as const,
+        weekStartsOn: 1 as const,
+        createdAt: new Date().toISOString(),
+      }),
+      deletedActivityIds: [...deletedActivityIds],
+      permanentlyDeletedActivityIds: [...permanentlyDeletedActivityIds],
+      updatedAt: new Date().toISOString(),
+    })
+  })
+}
+
+export async function permanentlyDeleteActivity(id: string): Promise<void> {
+  const runningSession = await db.activeSessions.where('activityId').equals(id).first()
+  if (runningSession) throw new Error('请先结束正在进行的计时')
+
+  await db.transaction('rw', db.activities, db.settings, async () => {
+    const activity = await db.activities.get(id)
+    if (!activity) throw new Error('没有找到这个行为')
+
+    const settings = await db.settings.get('app')
+    const deletedActivityIds = new Set(settings?.deletedActivityIds ?? [])
+    const permanentlyDeletedActivityIds = new Set(settings?.permanentlyDeletedActivityIds ?? [])
+    deletedActivityIds.delete(id)
+    permanentlyDeletedActivityIds.add(id)
     await db.activities.delete(id)
     await db.settings.put({
       ...(settings ?? {
@@ -81,6 +135,7 @@ export async function deleteActivity(id: string): Promise<void> {
         createdAt: new Date().toISOString(),
       }),
       deletedActivityIds: [...deletedActivityIds],
+      permanentlyDeletedActivityIds: [...permanentlyDeletedActivityIds],
       updatedAt: new Date().toISOString(),
     })
   })

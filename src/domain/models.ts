@@ -69,6 +69,7 @@ export interface AppSettings {
   weekStartsOn: 1
   lastBackupAt?: string
   deletedActivityIds?: string[]
+  permanentlyDeletedActivityIds?: string[]
   createdAt: string
   updatedAt: string
 }

@@ -133,7 +133,7 @@ test('confirms measurements and notes before saving records', async ({ page }, t
   })
 })
 
-test('deletes an activity from quick log and keeps settings in sync', async ({ page }, testInfo) => {
+test('restores and permanently deletes activities from the deleted section', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: '记录咖啡', exact: true }).click()
   await page.getByLabel('备注（可选）').fill('上午美式')
   await page.getByRole('button', { name: '确认记录' }).click()
@@ -175,6 +175,30 @@ test('deletes an activity from quick log and keeps settings in sync', async ({ p
   await page.getByRole('button', { name: '设置', exact: true }).click()
   await expect(page.getByRole('button', { name: '编辑咖啡', exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: '删除咖啡', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: '已删除' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '恢复咖啡', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: '永久删除咖啡', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: '恢复咖啡', exact: true }).click()
+  await expect(page.getByText('“咖啡”已恢复到首页')).toBeVisible()
+  await expect(page.getByRole('button', { name: '编辑咖啡', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: '恢复咖啡', exact: true })).toHaveCount(0)
+
+  await page.getByRole('button', { name: '记录', exact: true }).click()
+  await expect(page.getByRole('button', { name: '记录咖啡', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: '设置', exact: true }).click()
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toContain('已有 1 条历史记录会继续保留')
+    await dialog.accept()
+  })
+  await page.getByRole('button', { name: '删除咖啡', exact: true }).click()
+  await expect(page.getByRole('button', { name: '恢复咖啡', exact: true })).toBeVisible()
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toContain('已有 1 条历史记录会继续保留，但这个行为将无法恢复')
+    await dialog.accept()
+  })
+  await page.getByRole('button', { name: '永久删除咖啡', exact: true }).click()
+  await expect(page.getByText('“咖啡”已永久删除')).toBeVisible()
+  await expect(page.getByRole('button', { name: '恢复咖啡', exact: true })).toHaveCount(0)
 
   await page.getByRole('button', { name: '记录', exact: true }).click()
   await page.reload()
