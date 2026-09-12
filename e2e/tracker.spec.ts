@@ -85,7 +85,6 @@ test('keeps the backfill note visible above the mobile keyboard', async ({ page 
 })
 
 test('confirms measurements and notes before saving records', async ({ page }, testInfo) => {
-  const recentSection = page.locator('section[aria-labelledby="recent-title"]')
   const waterCard = page.getByRole('button', { name: '记录喝水', exact: true })
   const exerciseCard = page.getByRole('button', { name: '记录锻炼', exact: true })
 
@@ -94,14 +93,11 @@ test('confirms measurements and notes before saving records', async ({ page }, t
   await expect(page.getByRole('heading', { name: '记录喝水' })).toBeVisible()
   await expect(page.getByLabel('计量')).toHaveValue('250')
   await expect(page.getByLabel('计量')).not.toBeFocused()
-  await expect(recentSection.getByText('喝水', { exact: true })).toHaveCount(0)
   await page.getByLabel('计量').fill('300')
   await page.getByLabel('备注（可选）').fill('早餐后喝的温水')
   await page.getByRole('button', { name: '确认记录' }).click()
   await expect(page.getByText('已记录 喝水 300 ml')).toBeVisible()
   await expect(waterCard.getByText(/今日\s*1次/)).toBeVisible()
-  await expect(recentSection.getByText('喝水', { exact: true })).toBeVisible()
-  await expect(recentSection.getByText('早餐后喝的温水')).toBeVisible()
 
   await expect(exerciseCard.getByText(/今日\s*0次/)).toBeVisible()
   await page.getByRole('button', { name: '记录锻炼', exact: true }).click()

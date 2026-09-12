@@ -15,7 +15,6 @@ import {
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { ActivityIcon } from '../../components/ActivityIcon'
 import { QuickEntryModal } from '../../components/QuickEntryModal'
 import { RecordEditor } from '../../components/RecordEditor'
 import { db } from '../../db/database'
@@ -25,7 +24,7 @@ import { formatDuration } from '../../services/exportService'
 import { reorderActivities } from '../../services/activityService'
 import { recordInstant, startTimer, stopTimer, undoRecord } from '../../services/recordService'
 import { getPeriodRange } from '../../services/statisticsService'
-import { currentTimestamp, formatFullDate, formatTime } from '../../utils/dateTime'
+import { currentTimestamp, formatFullDate } from '../../utils/dateTime'
 import { SortableQuickCard } from './SortableQuickCard'
 
 interface QuickLogPageProps {
@@ -37,11 +36,6 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
     useLiveQuery(() => db.activities.orderBy('sortOrder').toArray(), [], [])
       .filter((activity) => !activity.isArchived)
   const activeSessions = useLiveQuery(() => db.activeSessions.toArray(), [], [])
-  const recentRecords = useLiveQuery(
-    () => db.records.orderBy('recordedAt').reverse().limit(5).toArray(),
-    [],
-    [],
-  )
   const todayRange = getPeriodRange('day', new Date())
   const todayRecords = useLiveQuery(
     () =>
@@ -140,14 +134,7 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
         </section>
       )}
 
-      <section aria-labelledby="quick-actions-title">
-        <div className="section-heading">
-          <div>
-            <p className="section-kicker" id="quick-actions-title">快速记录</p>
-          </div>
-          <span className="section-count">{activities.length} 项</span>
-        </div>
-
+      <section aria-label="记录项目">
         {activities.length ? (
           <DndContext
             sensors={sensors}
@@ -185,34 +172,6 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
             <p>还没有可用行为</p>
             <span>前往“设置”添加一个行为。</span>
           </div>
-        )}
-      </section>
-
-      <section className="recent-section" aria-labelledby="recent-title">
-        <div className="section-heading">
-          <div>
-            <h2 id="recent-title">最近记录</h2>
-          </div>
-        </div>
-        {recentRecords.length ? (
-          <div className="record-list compact-list">
-            {recentRecords.map((record) => {
-              const activity = activities.find((item) => item.id === record.activityId)
-              return (
-                <div className="record-row" key={record.id}>
-                  <ActivityIcon icon={record.activityIcon} tone={activity?.tone} />
-                  <div className="record-row-main">
-                    <strong>{record.activityName}</strong>
-                    <span>{formatTime(record.recordedAt)}{record.durationSeconds ? ` · ${formatDuration(record.durationSeconds)}` : ''}</span>
-                    {record.note && <small className="record-note recent-note">{record.note}</small>}
-                  </div>
-                  <span className="record-amount">{record.amount} <small>{record.unit}</small></span>
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          <div className="empty-state quiet-empty"><p>今天还没有记录</p></div>
         )}
       </section>
 
