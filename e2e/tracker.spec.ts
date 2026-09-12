@@ -39,6 +39,11 @@ test('confirms measurements and notes before saving records', async ({ page }, t
   await expect(page.locator('.history-groups').getByText('锻炼', { exact: true })).toBeVisible()
   await expect(page.locator('.history-groups').getByText('早餐后喝的温水')).toBeVisible()
   await expect(page.locator('.history-groups').getByText('跑步 5 公里和拉伸')).toBeVisible()
+  const historyNames = page.locator('.history-row strong')
+  await expect(historyNames).toHaveText(['喝水', '锻炼'])
+  await page.getByRole('button', { name: '当前早到晚，切换为晚到早' }).click()
+  await expect(historyNames).toHaveText(['锻炼', '喝水'])
+  await expect(page.getByRole('button', { name: '当前晚到早，切换为早到晚' })).toBeVisible()
   const historyRowHeight = await page.locator('.history-row').first().evaluate((row) => row.getBoundingClientRect().height)
   expect(historyRowHeight).toBeLessThanOrEqual(48)
   await page.screenshot({

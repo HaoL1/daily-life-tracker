@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { CalendarDays, ChevronRight, Plus } from 'lucide-react'
+import { ArrowDown, ArrowUp, CalendarDays, ChevronRight, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { RecordEditor } from '../../components/RecordEditor'
 import { db } from '../../db/database'
@@ -25,11 +25,14 @@ interface HistoryPageProps {
   notify: Notify
 }
 
+type HistorySortOrder = 'ascending' | 'descending'
+
 export function HistoryPage({ notify }: HistoryPageProps) {
   const records = useLiveQuery(() => db.records.orderBy('recordedAt').reverse().toArray(), [], [])
   const activities = useLiveQuery(() => db.activities.orderBy('sortOrder').toArray(), [], [])
   const [activityFilter, setActivityFilter] = useState('all')
   const [dateFilter, setDateFilter] = useState('')
+  const [sortOrder, setSortOrder] = useState<HistorySortOrder>('ascending')
   const [editor, setEditor] = useState<{ record?: ActivityRecord } | null>(null)
 
   const filteredRecords = records.filter((record) => {
@@ -86,10 +89,26 @@ export function HistoryPage({ notify }: HistoryPageProps) {
             <section className="history-day" key={date}>
               <header>
                 <h2>{formatDateHeading(dayRecords[0].recordedAt)}</h2>
-                <span>{dayRecords.length} 条</span>
+                <div className="history-day-actions">
+                  <span>{dayRecords.length} 条</span>
+                  <button
+                    className="history-sort-button"
+                    type="button"
+                    onClick={() => setSortOrder((current) => current === 'ascending' ? 'descending' : 'ascending')}
+                    aria-label={sortOrder === 'ascending' ? '当前早到晚，切换为晚到早' : '当前晚到早，切换为早到晚'}
+                    title={sortOrder === 'ascending' ? '切换为晚到早' : '切换为早到晚'}
+                  >
+                    {sortOrder === 'ascending' ? <ArrowDown size={14} /> : <ArrowUp size={14} />}
+                    {sortOrder === 'ascending' ? '早→晚' : '晚→早'}
+                  </button>
+                </div>
               </header>
               <div className="record-list">
-                {dayRecords.map((record) => {
+                {[...dayRecords]
+                  .sort((left, right) => sortOrder === 'ascending'
+                    ? left.recordedAt.localeCompare(right.recordedAt)
+                    : right.recordedAt.localeCompare(left.recordedAt))
+                  .map((record) => {
                   const activity = activities.find((item) => item.id === record.activityId)
                   const tone = activity?.tone ?? iconToneFallback[record.activityIcon] ?? 'neutral'
                   const detail = [
@@ -111,7 +130,7 @@ export function HistoryPage({ notify }: HistoryPageProps) {
                       <ChevronRight className="history-chevron" size={15} aria-hidden="true" />
                     </button>
                   )
-                })}
+                  })}
               </div>
             </section>
           ))}

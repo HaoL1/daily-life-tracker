@@ -346,6 +346,21 @@ h1, h2, h3, strong { overflow-wrap: anywhere; }
 .history-heading h1 { font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif; font-size: 25px; font-weight: 780; line-height: 1.15; }
 .history-day > header { display: flex; margin-bottom: 8px; align-items: center; justify-content: space-between; }
 .history-day > header h2 { font-size: 15px; }
+.history-day-actions { display: flex; align-items: center; gap: 8px; }
+.history-sort-button {
+  display: inline-flex;
+  min-height: 30px;
+  padding: 4px 7px;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--cp-border);
+  border-radius: 6px;
+  background: var(--cp-surface);
+  color: var(--cp-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+.history-sort-button:hover { border-color: var(--cp-border-strong); background: var(--cp-surface-soft); }
 .history-row {
   display: grid;
   width: 100%;
