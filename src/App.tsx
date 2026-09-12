@@ -15,12 +15,13 @@ import { HistoryPage } from './features/history/HistoryPage'
 import { QuickLogPage } from './features/quick-log/QuickLogPage'
 import { currentTimestamp } from './utils/dateTime'
 
-const SettingsPage = lazy(() =>
-  import('./features/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })),
-)
-const StatisticsPage = lazy(() =>
-  import('./features/statistics/StatisticsPage').then((module) => ({ default: module.StatisticsPage })),
-)
+const loadSettingsPage = () =>
+  import('./features/settings/SettingsPage').then((module) => ({ default: module.SettingsPage }))
+const loadStatisticsPage = () =>
+  import('./features/statistics/StatisticsPage').then((module) => ({ default: module.StatisticsPage }))
+
+const SettingsPage = lazy(loadSettingsPage)
+const StatisticsPage = lazy(loadStatisticsPage)
 
 type Tab = 'log' | 'history' | 'statistics' | 'settings'
 
@@ -117,6 +118,9 @@ function App() {
     if (!button || !event.currentTarget.contains(button)) return
     const startTab = button.dataset.tab as Tab
 
+    void loadSettingsPage()
+    void loadStatisticsPage()
+
     clearNavPressTimer()
     navGestureActiveRef.current = false
     navPreviewRef.current = startTab
@@ -178,6 +182,19 @@ function App() {
     setNavGliding(false)
   }
 
+  function cancelNavGesture(event: ReactPointerEvent<HTMLElement>) {
+    const pointer = navPointerRef.current
+    if (!pointer || pointer.pointerId !== event.pointerId) return
+    clearNavPressTimer()
+    suppressNavClickUntilRef.current = currentTimestamp() + 350
+    if (navRef.current?.hasPointerCapture(event.pointerId)) {
+      navRef.current.releasePointerCapture(event.pointerId)
+    }
+    navGestureActiveRef.current = false
+    navPointerRef.current = null
+    setNavGliding(false)
+  }
+
   const selectedNavTab = navGliding ? navPreviewTab : activeTab
   const selectedNavIndex = navigation.findIndex((item) => item.id === selectedNavTab)
   const navStyle = {
@@ -206,7 +223,7 @@ function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${navGliding ? 'is-nav-gliding' : ''}`}>
       <header className="app-header">
         <button className="brand-button" type="button" onClick={() => setActiveTab('log')} aria-label="返回记录首页">
           <span className="brand-mark">日</span>
@@ -216,10 +233,10 @@ function App() {
 
       <main className="app-main">
         <Suspense fallback={<div className="lazy-state">正在打开…</div>}>
-          {activeTab === 'log' && <QuickLogPage notify={notify} />}
-          {activeTab === 'history' && <HistoryPage notify={notify} />}
-          {activeTab === 'statistics' && <StatisticsPage />}
-          {activeTab === 'settings' && <SettingsPage notify={notify} />}
+          {selectedNavTab === 'log' && <QuickLogPage notify={notify} />}
+          {selectedNavTab === 'history' && <HistoryPage notify={notify} />}
+          {selectedNavTab === 'statistics' && <StatisticsPage />}
+          {selectedNavTab === 'settings' && <SettingsPage notify={notify} />}
         </Suspense>
       </main>
 
@@ -231,7 +248,7 @@ function App() {
         onPointerDown={handleNavPointerDown}
         onPointerMove={handleNavPointerMove}
         onPointerUp={finishNavGesture}
-        onPointerCancel={finishNavGesture}
+        onPointerCancel={cancelNavGesture}
         onContextMenu={(event) => event.preventDefault()}
       >
         {navigation.map((item) => {

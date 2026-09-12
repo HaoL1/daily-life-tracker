@@ -1076,6 +1076,10 @@ select:disabled {
   transform: scale(1.035);
 }
 
+.app-shell.is-nav-gliding .page {
+  animation-duration: 120ms;
+}
+
 .toast,
 .update-toast {
   border-color: var(--cp-sheen);

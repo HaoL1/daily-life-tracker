@@ -35,6 +35,8 @@ test('long-presses and glides across the glass navigation', async ({ page }, tes
       })
     }
     await expect(nav.getByRole('button', { name: '统计', exact: true })).toHaveClass(/active/)
+    await expect(page.getByRole('heading', { name: '看看最近的节奏' })).toBeVisible()
+    await expect(nav.locator('button[aria-current=page] span')).toHaveText('记录')
     const glass = await nav.evaluate((element) => ({
       background: getComputedStyle(element, '::before').backgroundImage,
       blur: getComputedStyle(element, '::before').backdropFilter,
@@ -48,6 +50,7 @@ test('long-presses and glides across the glass navigation', async ({ page }, tes
     await page.waitForTimeout(360)
     await expect(nav).toHaveClass(/is-gliding/)
     await page.mouse.move(endX, endY, { steps: 12 })
+    await expect(page.getByRole('heading', { name: '看看最近的节奏' })).toBeVisible()
     await page.mouse.up()
   }
 
