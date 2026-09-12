@@ -732,3 +732,368 @@ input:disabled, select:disabled { background: var(--cp-surface-soft); color: var
     transition-duration: 1ms !important;
   }
 }
+
+/* iOS-inspired visual layer: glass is reserved for navigation and elevated surfaces. */
+body {
+  background: linear-gradient(180deg, var(--cp-bg-elevated), var(--cp-bg) 46%, var(--cp-bg-elevated));
+  background-attachment: fixed;
+}
+
+.app-shell {
+  padding-bottom: calc(98px + env(safe-area-inset-bottom));
+}
+
+.app-header {
+  height: calc(68px + env(safe-area-inset-top));
+  padding-top: calc(10px + env(safe-area-inset-top));
+  border-bottom-color: var(--cp-sheen);
+  background: var(--cp-panel);
+  box-shadow: 0 1px 0 var(--cp-sheen);
+  -webkit-backdrop-filter: saturate(180%) blur(28px);
+  backdrop-filter: saturate(180%) blur(28px);
+}
+
+.brand-mark {
+  width: 40px;
+  height: 40px;
+  flex-basis: 40px;
+  border-radius: 13px;
+  box-shadow: inset 0 1px 0 var(--cp-sheen), 0 8px 18px var(--cp-accent-soft);
+  font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.page {
+  gap: 24px;
+  padding: 26px max(16px, env(safe-area-inset-left)) 48px max(16px, env(safe-area-inset-right));
+}
+
+.page-heading h1 {
+  margin-top: 5px;
+  font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: clamp(30px, 8vw, 40px);
+  font-weight: 780;
+  line-height: 1.08;
+}
+
+.heading-support {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.section-heading {
+  margin-bottom: 12px;
+}
+
+.primary-button,
+.secondary-button,
+.icon-button,
+.text-button,
+.danger-text-button {
+  border-radius: 14px;
+}
+
+.primary-button {
+  box-shadow: inset 0 1px 0 var(--cp-sheen), 0 8px 18px var(--cp-accent-soft);
+}
+
+.secondary-button,
+.icon-button,
+.danger-text-button {
+  border-color: var(--cp-sheen);
+  background: var(--cp-panel-strong);
+  box-shadow: inset 0 1px 0 var(--cp-sheen);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.activity-icon {
+  width: 44px;
+  height: 44px;
+  flex-basis: 44px;
+  border-radius: 15px;
+  box-shadow: inset 0 1px 0 var(--cp-sheen);
+}
+
+.running-strip,
+.privacy-band {
+  padding: 14px 16px;
+  border: 1px solid var(--cp-sheen);
+  border-radius: 18px;
+  background: var(--cp-panel);
+  box-shadow: inset 0 1px 0 var(--cp-sheen), 0 8px 24px var(--cp-accent-soft);
+  -webkit-backdrop-filter: saturate(150%) blur(18px);
+  backdrop-filter: saturate(150%) blur(18px);
+}
+
+.quick-grid {
+  gap: 12px;
+}
+
+.quick-card {
+  min-height: 118px;
+  border-color: var(--cp-sheen);
+  border-radius: 20px;
+  background: linear-gradient(145deg, var(--cp-panel-strong), var(--cp-panel));
+  box-shadow: inset 0 1px 0 var(--cp-sheen), 0 8px 24px var(--cp-accent-soft);
+  -webkit-backdrop-filter: saturate(145%) blur(16px);
+  backdrop-filter: saturate(145%) blur(16px);
+}
+
+.quick-card-main {
+  min-height: 118px;
+  padding: 16px;
+  grid-template-columns: 44px minmax(0, 1fr) 20px;
+}
+
+.quick-card-main:hover {
+  background: var(--cp-highlight);
+}
+
+.quick-card.is-dragging {
+  border-color: var(--cp-accent);
+  border-radius: 22px;
+  box-shadow: inset 0 1px 0 var(--cp-sheen), 0 18px 48px var(--cp-accent-soft);
+  transform-origin: center;
+}
+
+.record-list,
+.summary-list,
+.activity-settings-list,
+.info-list {
+  border-color: var(--cp-sheen);
+  border-radius: 20px;
+  background: var(--cp-panel-strong);
+  box-shadow: inset 0 1px 0 var(--cp-sheen), 0 8px 24px var(--cp-accent-soft);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.record-row,
+.summary-row,
+.activity-setting-row,
+.info-list > div,
+.history-row {
+  border-bottom-color: var(--cp-sheen);
+  background: transparent;
+}
+
+.history-row:hover,
+.action-button:hover {
+  background: var(--cp-highlight);
+}
+
+.history-sort-button {
+  min-height: 32px;
+  padding-inline: 9px;
+  border-color: var(--cp-sheen);
+  border-radius: 12px;
+  background: var(--cp-panel-strong);
+  box-shadow: inset 0 1px 0 var(--cp-sheen);
+}
+
+.filter-bar,
+.export-controls,
+.custom-range {
+  gap: 8px;
+}
+
+input,
+select,
+textarea {
+  border-color: var(--cp-sheen);
+  border-radius: 14px;
+  background: var(--cp-panel-strong);
+  box-shadow: inset 0 1px 0 var(--cp-sheen);
+}
+
+input,
+select {
+  height: 48px;
+}
+
+textarea {
+  border-radius: 16px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--cp-accent);
+  box-shadow: 0 0 0 4px var(--cp-highlight), inset 0 1px 0 var(--cp-sheen);
+  outline: none;
+}
+
+input:disabled,
+select:disabled {
+  background: var(--cp-surface-soft);
+}
+
+.segmented {
+  padding: 4px;
+  border-color: var(--cp-sheen);
+  border-radius: 16px;
+  background: var(--cp-panel);
+  box-shadow: inset 0 1px 0 var(--cp-sheen);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+
+.segmented button {
+  min-height: 38px;
+  border-radius: 12px;
+}
+
+.segmented button.selected {
+  border-color: var(--cp-sheen);
+  border-radius: 12px;
+  background: var(--cp-panel-strong);
+  box-shadow: 0 4px 12px var(--cp-accent-soft), inset 0 1px 0 var(--cp-sheen);
+}
+
+.metric-band {
+  padding: 16px 8px;
+  border: 1px solid var(--cp-sheen);
+  border-radius: 20px;
+  background: var(--cp-panel);
+  box-shadow: inset 0 1px 0 var(--cp-sheen);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.empty-state {
+  border-color: var(--cp-border);
+  border-radius: 20px;
+  background: var(--cp-panel);
+}
+
+.action-button,
+.backup-band {
+  border-color: var(--cp-sheen);
+  border-radius: 18px;
+  background: var(--cp-panel-strong);
+  box-shadow: inset 0 1px 0 var(--cp-sheen), 0 6px 18px var(--cp-accent-soft);
+}
+
+.modal-backdrop {
+  background: var(--cp-overlay);
+  -webkit-backdrop-filter: saturate(130%) blur(28px);
+  backdrop-filter: saturate(130%) blur(28px);
+}
+
+.modal-sheet {
+  border-color: var(--cp-sheen);
+  border-radius: 28px;
+  background: var(--cp-panel-strong);
+  box-shadow: inset 0 1px 0 var(--cp-sheen), var(--cp-shadow);
+  -webkit-backdrop-filter: saturate(160%) blur(32px);
+  backdrop-filter: saturate(160%) blur(32px);
+}
+
+.modal-header {
+  padding: 20px 20px 16px;
+  border-bottom-color: var(--cp-sheen);
+}
+
+.modal-content {
+  padding: 20px;
+}
+
+.quick-entry-summary {
+  border-color: var(--cp-sheen);
+  border-radius: 18px;
+  background: var(--cp-panel);
+  box-shadow: inset 0 1px 0 var(--cp-sheen);
+}
+
+.bottom-nav {
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(8px, env(safe-area-inset-bottom));
+  left: max(12px, env(safe-area-inset-left));
+  height: 70px;
+  padding: 6px;
+  border: 1px solid var(--cp-sheen);
+  border-radius: 24px;
+  background: var(--cp-panel);
+  box-shadow: inset 0 1px 0 var(--cp-sheen), var(--cp-shadow);
+  -webkit-backdrop-filter: saturate(180%) blur(30px);
+  backdrop-filter: saturate(180%) blur(30px);
+}
+
+.bottom-nav button {
+  min-height: 56px;
+  border-radius: 18px;
+}
+
+.bottom-nav button.active {
+  background: var(--cp-highlight);
+  box-shadow: inset 0 1px 0 var(--cp-sheen);
+}
+
+.toast,
+.update-toast {
+  border-color: var(--cp-sheen);
+  border-radius: 18px;
+  background: var(--cp-panel-strong);
+  box-shadow: inset 0 1px 0 var(--cp-sheen), var(--cp-shadow);
+  -webkit-backdrop-filter: saturate(170%) blur(24px);
+  backdrop-filter: saturate(170%) blur(24px);
+}
+
+.toast {
+  bottom: calc(94px + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 680px) {
+  .page {
+    padding: 40px 28px 64px;
+    gap: 30px;
+  }
+
+  .bottom-nav {
+    right: 50%;
+    bottom: 16px;
+    left: auto;
+    width: min(calc(100% - 32px), 560px);
+    transform: translateX(50%);
+  }
+}
+
+@media (max-width: 520px) {
+  .page-heading h1 {
+    font-size: 32px;
+  }
+
+  .modal-sheet {
+    border-radius: 26px;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .app-header,
+  .bottom-nav,
+  .quick-card,
+  .record-list,
+  .summary-list,
+  .activity-settings-list,
+  .modal-sheet,
+  .toast,
+  .update-toast,
+  .running-strip,
+  .privacy-band {
+    background: var(--cp-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .app-header,
+  .bottom-nav,
+  .modal-sheet,
+  .toast,
+  .update-toast {
+    background: var(--cp-surface);
+  }
+}
