@@ -34,15 +34,61 @@ test('confirms measurements and notes before saving records', async ({ page }, t
   await expect(page.getByText(/锻炼已结束/)).toBeVisible()
 
   await page.getByRole('button', { name: '历史', exact: true }).click()
-  await expect(page.getByRole('heading', { name: '每一天，都有迹可循' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: '历史记录' })).toBeVisible()
   await expect(page.locator('.history-groups').getByText('喝水', { exact: true })).toBeVisible()
   await expect(page.locator('.history-groups').getByText('锻炼', { exact: true })).toBeVisible()
   await expect(page.locator('.history-groups').getByText('早餐后喝的温水')).toBeVisible()
   await expect(page.locator('.history-groups').getByText('跑步 5 公里和拉伸')).toBeVisible()
+  const historyRowHeight = await page.locator('.history-row').first().evaluate((row) => row.getBoundingClientRect().height)
+  expect(historyRowHeight).toBeLessThanOrEqual(48)
   await page.screenshot({
     path: `test-results/${testInfo.project.name}-history-notes.png`,
     fullPage: true,
   })
+})
+
+test('deletes an activity permanently while preserving its history', async ({ page }) => {
+  await page.getByRole('button', { name: '记录咖啡', exact: true }).click()
+  await page.getByLabel('备注（可选）').fill('上午美式')
+  await page.getByRole('button', { name: '确认记录' }).click()
+  await expect(page.getByText('已记录 咖啡 1 次')).toBeVisible()
+
+  await page.getByRole('button', { name: '设置', exact: true }).click()
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toContain('已有 1 条历史记录会继续保留')
+    expect(dialog.message()).toContain('此操作无法撤销')
+    await dialog.accept()
+  })
+  await page.getByRole('button', { name: '删除咖啡', exact: true }).click()
+  await expect(page.getByText('“咖啡”已删除，历史记录仍会保留')).toBeVisible()
+
+  await page.getByRole('button', { name: '记录', exact: true }).click()
+  await expect(page.getByRole('button', { name: '记录咖啡', exact: true })).toHaveCount(0)
+  await page.reload()
+  await expect(page.getByRole('heading', { name: '今天，记一下' })).toBeVisible()
+  await expect(page.getByRole('button', { name: '记录咖啡', exact: true })).toHaveCount(0)
+
+  await page.getByRole('button', { name: '历史', exact: true }).click()
+  await page.locator('.history-row').filter({ hasText: '咖啡' }).click()
+  const editor = page.getByRole('dialog')
+  await expect(editor.getByRole('heading', { name: '编辑记录' })).toBeVisible()
+  await expect(editor.getByLabel('行为')).toHaveValue('preset-coffee')
+  await expect(editor.getByLabel('行为')).toContainText('咖啡（已删除）')
+  await expect(editor.getByLabel('备注（可选）')).toHaveValue('上午美式')
+})
+
+test('prevents deleting an activity while its timer is running', async ({ page }) => {
+  await page.getByRole('button', { name: '记录开车', exact: true }).click()
+  await page.getByRole('button', { name: '开始计时' }).click()
+  await expect(page.getByRole('status').getByText('开车开始计时')).toBeVisible()
+
+  await page.getByRole('button', { name: '设置', exact: true }).click()
+  page.once('dialog', (dialog) => dialog.accept())
+  await page.getByRole('button', { name: '删除开车', exact: true }).click()
+  await expect(page.getByText('请先结束正在进行的计时')).toBeVisible()
+
+  await page.getByRole('button', { name: '记录', exact: true }).click()
+  await expect(page.getByRole('button', { name: '结束开车', exact: true })).toBeVisible()
 })
 
 test('shows all presets, adds a custom action and renders statistics', async ({ page }, testInfo) => {

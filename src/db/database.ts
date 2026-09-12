@@ -29,10 +29,32 @@ export const db = new TrackerDatabase()
 export async function initializeDatabase(): Promise<void> {
   await db.transaction('rw', db.activities, db.settings, async () => {
     const defaults = createDefaultActivities()
+    let settings = await db.settings.get('app')
+    if (!settings) {
+      settings = createDefaultSettings()
+      await db.settings.add(settings)
+    }
+
     const existingActivities = await db.activities.toArray()
+    const deletedActivityIds = new Set(settings.deletedActivityIds ?? [])
+    const previouslyArchivedIds = existingActivities
+      .filter((activity) => activity.isArchived)
+      .map((activity) => activity.id)
+
+    if (previouslyArchivedIds.length > 0) {
+      previouslyArchivedIds.forEach((id) => deletedActivityIds.add(id))
+      await db.activities.bulkDelete(previouslyArchivedIds)
+      settings = {
+        ...settings,
+        deletedActivityIds: [...deletedActivityIds],
+        updatedAt: new Date().toISOString(),
+      }
+      await db.settings.put(settings)
+    }
 
     if (existingActivities.length === 0) {
-      await db.activities.bulkAdd(defaults)
+      const availableDefaults = defaults.filter((activity) => !deletedActivityIds.has(activity.id))
+      if (availableDefaults.length > 0) await db.activities.bulkAdd(availableDefaults)
     } else {
       const legacyToilet = existingActivities.find(
         (activity) => activity.id === 'preset-toilet' && activity.name === '上厕所',
@@ -47,15 +69,12 @@ export async function initializeDatabase(): Promise<void> {
       const existingIds = new Set(existingActivities.map((activity) => activity.id))
       let nextSortOrder = Math.max(...existingActivities.map((activity) => activity.sortOrder)) + 1
       const missingDefaults = defaults
-        .filter((activity) => !existingIds.has(activity.id))
+        .filter((activity) => !existingIds.has(activity.id) && !deletedActivityIds.has(activity.id))
         .map((activity) => ({ ...activity, sortOrder: nextSortOrder++ }))
       if (missingDefaults.length > 0) {
         await db.activities.bulkAdd(missingDefaults)
       }
     }
 
-    if (!(await db.settings.get('app'))) {
-      await db.settings.add(createDefaultSettings())
-    }
   })
 }

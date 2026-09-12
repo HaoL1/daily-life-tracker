@@ -10,6 +10,7 @@ interface RecordEditorProps {
   initialActivityId?: string
   onClose: () => void
   onSaved: (message: string) => void
+  onDelete?: () => Promise<void>
 }
 
 export function RecordEditor({
@@ -18,10 +19,11 @@ export function RecordEditor({
   initialActivityId,
   onClose,
   onSaved,
+  onDelete,
 }: RecordEditorProps) {
   const initialActivity =
     activities.find((item) => item.id === (record?.activityId ?? initialActivityId)) ?? activities[0]
-  const [activityId, setActivityId] = useState(initialActivity?.id ?? '')
+  const [activityId, setActivityId] = useState(record?.activityId ?? initialActivity?.id ?? '')
   const [amount, setAmount] = useState(record?.amount ?? initialActivity?.defaultAmount ?? '1')
   const [recordedAt, setRecordedAt] = useState(toDateTimeInput(record?.recordedAt))
   const [startedAt, setStartedAt] = useState(
@@ -31,7 +33,20 @@ export function RecordEditor({
   const [note, setNote] = useState(record?.note ?? '')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
-  const selectedActivity = activities.find((item) => item.id === activityId)
+  const [deleting, setDeleting] = useState(false)
+  const selectedActivity = activities.find((item) => item.id === activityId) ?? (record ? {
+    id: record.activityId,
+    name: record.activityName,
+    icon: record.activityIcon,
+    tone: 'neutral' as const,
+    mode: record.activityMode ?? (record.startedAt ? 'timer' as const : 'instant' as const),
+    defaultAmount: record.amount,
+    unit: record.unit,
+    sortOrder: -1,
+    isArchived: false,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
+  } : undefined)
   const recordMode = record?.activityMode ?? selectedActivity?.mode
   const displayUnit = record?.unit ?? selectedActivity?.unit ?? ''
 
@@ -71,6 +86,19 @@ export function RecordEditor({
     }
   }
 
+  async function handleDelete() {
+    if (!record || !onDelete || !window.confirm(`删除“${record.activityName}”这条记录？`)) return
+    setDeleting(true)
+    setError('')
+    try {
+      await onDelete()
+      onClose()
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : '删除失败，请重试')
+      setDeleting(false)
+    }
+  }
+
   return (
     <Modal
       title={record ? '编辑记录' : '补记一条'}
@@ -90,9 +118,12 @@ export function RecordEditor({
               if (nextActivity) setAmount(nextActivity.defaultAmount)
             }}
           >
+            {record && !activities.some((activity) => activity.id === record.activityId) && (
+              <option value={record.activityId}>{record.activityName}（已删除）</option>
+            )}
             {activities.map((activity) => (
               <option key={activity.id} value={activity.id}>
-                {activity.name}{activity.isArchived ? '（已归档）' : ''}
+                {activity.name}
               </option>
             ))}
           </select>
@@ -159,9 +190,16 @@ export function RecordEditor({
         </label>
 
         {error && <p className="form-error" role="alert">{error}</p>}
-        <button className="primary-button full-width" type="submit" disabled={saving || !selectedActivity}>
-          {saving ? '正在保存…' : '保存记录'}
-        </button>
+        <div className="form-actions">
+          {record && onDelete && (
+            <button className="danger-text-button" type="button" disabled={saving || deleting} onClick={() => void handleDelete()}>
+              {deleting ? '正在删除…' : '删除记录'}
+            </button>
+          )}
+          <button className="primary-button form-submit" type="submit" disabled={saving || deleting || !selectedActivity}>
+            {saving ? '正在保存…' : '保存记录'}
+          </button>
+        </div>
       </form>
     </Modal>
   )

@@ -341,9 +341,58 @@ h1, h2, h3, strong { overflow-wrap: anywhere; }
 .row-actions { display: flex; flex: 0 0 auto; gap: 4px; }
 
 .history-groups { display: grid; gap: 24px; }
+.history-page { gap: 18px; }
+.history-heading { align-items: center; }
+.history-heading h1 { font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif; font-size: 25px; font-weight: 780; line-height: 1.15; }
 .history-day > header { display: flex; margin-bottom: 8px; align-items: center; justify-content: space-between; }
 .history-day > header h2 { font-size: 15px; }
-.history-row { min-height: 76px; }
+.history-row {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 7px 10px;
+  grid-template-columns: 42px 9px minmax(52px, 35%) minmax(0, 1fr) 15px;
+  align-items: center;
+  gap: 9px;
+  border-bottom: 1px solid var(--cp-border);
+  background: var(--cp-surface);
+  color: var(--cp-text);
+  text-align: left;
+}
+.history-row:last-child { border-bottom: 0; }
+.history-row:hover { background: var(--cp-surface-soft); }
+.history-row time {
+  color: var(--cp-text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.history-row strong {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.history-marker {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: var(--cp-text-muted);
+}
+.history-marker.tone-accent { background: var(--cp-accent); }
+.history-marker.tone-link { background: var(--cp-link); }
+.history-marker.tone-success { background: var(--cp-success); }
+.history-marker.tone-warning { background: var(--cp-warning); }
+.history-marker.tone-danger { background: var(--cp-danger); }
+.history-detail {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--cp-text-soft);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.history-chevron { color: var(--cp-border-strong); }
 .filter-bar, .export-controls, .custom-range { display: flex; min-width: 0; align-items: flex-end; gap: 10px; }
 .compact-field, .field { display: grid; min-width: 0; gap: 6px; }
 .compact-field { flex: 1; }
@@ -407,14 +456,6 @@ input:disabled, select:disabled { background: var(--cp-surface-soft); color: var
 .activity-setting-row { min-height: 74px; }
 .inline-status { display: inline-block; margin: 0 0 0 7px !important; color: var(--cp-accent) !important; font-size: 10px !important; font-weight: 800; }
 .settings-row-actions { gap: 2px; }
-
-.archived-list { margin-top: 10px; border: 1px solid var(--cp-border); border-radius: 8px; background: var(--cp-surface); }
-.archived-list summary { display: flex; min-height: 48px; padding: 0 13px; align-items: center; gap: 7px; color: var(--cp-text-muted); cursor: pointer; font-size: 13px; font-weight: 700; list-style: none; }
-.archived-list summary span { margin-left: auto; }
-.archived-list[open] summary svg { transform: rotate(90deg); }
-.archived-row { display: flex; min-height: 48px; padding: 6px 12px; align-items: center; gap: 9px; border-top: 1px solid var(--cp-border); font-size: 13px; }
-.archived-row .activity-icon { width: 32px; height: 32px; flex-basis: 32px; }
-.archived-row > span { flex: 1; }
 
 .selection-summary { margin: 10px 0 14px; color: var(--cp-text-muted); font-size: 12px; }
 .export-custom-range { margin-top: 10px; }
@@ -499,6 +540,17 @@ input:disabled, select:disabled { background: var(--cp-surface-soft); color: var
 }
 .modal-open .bottom-nav { visibility: hidden; }
 .form-stack { display: grid; gap: 15px; }
+.form-actions { display: flex; align-items: center; gap: 10px; }
+.form-submit { flex: 1; }
+.danger-text-button {
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--cp-surface-soft);
+  color: var(--cp-danger);
+  font-size: 12px;
+  font-weight: 750;
+}
 .quick-entry-summary {
   display: flex;
   min-width: 0;
@@ -606,10 +658,6 @@ input:disabled, select:disabled { background: var(--cp-surface-soft); color: var
   .page-heading h1 { font-size: 31px; }
   .filter-bar, .export-controls { flex-wrap: wrap; }
   .filter-bar .compact-field, .export-controls .compact-field { flex-basis: calc(50% - 5px); }
-  .history-row { flex-wrap: wrap; }
-  .history-row .record-row-main { width: calc(100% - 54px); flex: 1 1 calc(100% - 54px); }
-  .history-row .record-amount { margin-left: 53px; }
-  .history-row .row-actions { margin-left: auto; }
   .settings-row-actions { display: grid; grid-template-columns: repeat(2, 36px); }
   .activity-setting-row { align-items: flex-start; }
   .activity-setting-copy { padding-top: 3px; }

@@ -1,15 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
-  Archive,
   ArrowDown,
   ArrowUp,
-  ChevronRight,
   HardDrive,
   Pencil,
   Plus,
-  RotateCcw,
   ShieldCheck,
   Smartphone,
+  Trash2,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ActivityEditor } from '../../components/ActivityEditor'
@@ -17,7 +15,7 @@ import { ActivityIcon } from '../../components/ActivityIcon'
 import { db } from '../../db/database'
 import type { ActivityDefinition } from '../../domain/models'
 import type { Notify } from '../../domain/ui'
-import { moveActivity, setActivityArchived } from '../../services/activityService'
+import { deleteActivity, moveActivity } from '../../services/activityService'
 import { requestPersistentStorage, type StorageStatus } from '../../services/storageService'
 import { DataExportPanel } from './DataExportPanel'
 
@@ -31,7 +29,6 @@ export function SettingsPage({ notify }: SettingsPageProps) {
   const [editor, setEditor] = useState<ActivityDefinition | 'new' | null>(null)
   const [storage, setStorage] = useState<StorageStatus | null>(null)
   const visible = activities.filter((activity) => !activity.isArchived)
-  const archived = activities.filter((activity) => activity.isArchived)
 
   useEffect(() => {
     void requestPersistentStorage().then(setStorage).catch(() => {
@@ -39,10 +36,16 @@ export function SettingsPage({ notify }: SettingsPageProps) {
     })
   }, [])
 
-  async function archive(activity: ActivityDefinition, isArchived: boolean) {
+  async function remove(activity: ActivityDefinition) {
+    const recordCount = await db.records.where('activityId').equals(activity.id).count()
+    const historyMessage = recordCount
+      ? `已有 ${recordCount} 条历史记录会继续保留。`
+      : '这个行为还没有历史记录。'
+    if (!window.confirm(`从首页删除“${activity.name}”？\n\n${historyMessage}\n此操作无法撤销。`)) return
+
     try {
-      await setActivityArchived(activity.id, isArchived)
-      notify(isArchived ? '行为已归档，历史记录仍会保留' : '行为已恢复到首页')
+      await deleteActivity(activity.id)
+      notify(`“${activity.name}”已删除，历史记录仍会保留`)
     } catch (caught) {
       notify(caught instanceof Error ? caught.message : '操作失败，请重试')
     }
@@ -81,24 +84,12 @@ export function SettingsPage({ notify }: SettingsPageProps) {
                   <button className="icon-button small-icon-button" type="button" disabled={index === 0} onClick={() => void moveActivity(activity.id, -1)} aria-label={`上移${activity.name}`} title="上移"><ArrowUp size={17} /></button>
                   <button className="icon-button small-icon-button" type="button" disabled={index === visible.length - 1} onClick={() => void moveActivity(activity.id, 1)} aria-label={`下移${activity.name}`} title="下移"><ArrowDown size={17} /></button>
                   <button className="icon-button small-icon-button" type="button" onClick={() => setEditor(activity)} aria-label={`编辑${activity.name}`} title="编辑"><Pencil size={17} /></button>
-                  <button className="icon-button small-icon-button" type="button" onClick={() => void archive(activity, true)} aria-label={`归档${activity.name}`} title="归档"><Archive size={17} /></button>
+                  <button className="icon-button small-icon-button danger-button" type="button" onClick={() => void remove(activity)} aria-label={`删除${activity.name}`} title="删除"><Trash2 size={17} /></button>
                 </div>
               </article>
             )
           })}
         </div>
-        {archived.length > 0 && (
-          <details className="archived-list">
-            <summary>已归档行为 <span>{archived.length}</span><ChevronRight size={17} /></summary>
-            {archived.map((activity) => (
-              <div className="archived-row" key={activity.id}>
-                <ActivityIcon icon={activity.icon} tone={activity.tone} size={18} />
-                <span>{activity.name}</span>
-                <button className="text-button" type="button" onClick={() => void archive(activity, false)}><RotateCcw size={15} />恢复</button>
-              </div>
-            ))}
-          </details>
-        )}
       </section>
 
       <DataExportPanel notify={notify} />

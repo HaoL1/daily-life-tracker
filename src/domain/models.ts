@@ -67,6 +67,7 @@ export interface AppSettings {
   id: 'app'
   weekStartsOn: 1
   lastBackupAt?: string
+  deletedActivityIds?: string[]
   createdAt: string
   updatedAt: string
 }

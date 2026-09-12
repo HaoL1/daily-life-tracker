@@ -62,17 +62,28 @@ export async function saveActivity(
   return activity
 }
 
-export async function setActivityArchived(id: string, isArchived: boolean): Promise<void> {
-  if (isArchived) {
-    const runningSession = await db.activeSessions.where('activityId').equals(id).first()
-    if (runningSession) throw new Error('请先结束正在进行的计时')
-  }
+export async function deleteActivity(id: string): Promise<void> {
+  const runningSession = await db.activeSessions.where('activityId').equals(id).first()
+  if (runningSession) throw new Error('请先结束正在进行的计时')
 
-  const updated = await db.activities.update(id, {
-    isArchived,
-    updatedAt: new Date().toISOString(),
+  await db.transaction('rw', db.activities, db.settings, async () => {
+    const activity = await db.activities.get(id)
+    if (!activity) throw new Error('没有找到这个行为')
+
+    const settings = await db.settings.get('app')
+    const deletedActivityIds = new Set(settings?.deletedActivityIds ?? [])
+    deletedActivityIds.add(id)
+    await db.activities.delete(id)
+    await db.settings.put({
+      ...(settings ?? {
+        id: 'app' as const,
+        weekStartsOn: 1 as const,
+        createdAt: new Date().toISOString(),
+      }),
+      deletedActivityIds: [...deletedActivityIds],
+      updatedAt: new Date().toISOString(),
+    })
   })
-  if (!updated) throw new Error('没有找到这个行为')
 }
 
 export async function moveActivity(id: string, direction: -1 | 1): Promise<void> {

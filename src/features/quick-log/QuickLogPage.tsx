@@ -141,7 +141,7 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
         ) : (
           <div className="empty-state">
             <p>还没有可用行为</p>
-            <span>前往“设置”添加或恢复一个行为。</span>
+            <span>前往“设置”添加一个行为。</span>
           </div>
         )}
       </section>

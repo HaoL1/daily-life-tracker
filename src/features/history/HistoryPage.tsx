@@ -1,7 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { CalendarDays, Pencil, Plus, Trash2 } from 'lucide-react'
+import { CalendarDays, ChevronRight, Plus } from 'lucide-react'
 import { useState } from 'react'
-import { ActivityIcon } from '../../components/ActivityIcon'
 import { RecordEditor } from '../../components/RecordEditor'
 import { db } from '../../db/database'
 import type { ActivityRecord } from '../../domain/models'
@@ -9,6 +8,18 @@ import type { Notify } from '../../domain/ui'
 import { deleteRecord } from '../../services/recordService'
 import { formatDuration } from '../../services/exportService'
 import { formatDateHeading, formatTime, toDateInput } from '../../utils/dateTime'
+
+const iconToneFallback: Partial<Record<ActivityRecord['activityIcon'], string>> = {
+  water: 'link',
+  soda: 'link',
+  toilet: 'success',
+  meal: 'danger',
+  snack: 'warning',
+  fruit: 'success',
+  exercise: 'danger',
+  drive: 'warning',
+  coffee: 'warning',
+}
 
 interface HistoryPageProps {
   notify: Notify
@@ -33,18 +44,16 @@ export function HistoryPage({ notify }: HistoryPageProps) {
   }
 
   async function handleDelete(record: ActivityRecord) {
-    if (!window.confirm(`删除“${record.activityName}”这条记录？`)) return
     await deleteRecord(record.id)
     notify('记录已删除')
   }
 
   return (
     <div className="page history-page">
-      <header className="page-heading">
+      <header className="page-heading history-heading">
         <div>
           <p className="eyebrow">时间线</p>
-          <h1>每一天，都有迹可循</h1>
-          <p className="heading-support">筛选、补记或修正历史记录。</p>
+          <h1>历史记录</h1>
         </div>
         <button className="primary-button compact-button" type="button" onClick={() => setEditor({})} disabled={!activities.length}>
           <Plus size={18} />
@@ -82,27 +91,25 @@ export function HistoryPage({ notify }: HistoryPageProps) {
               <div className="record-list">
                 {dayRecords.map((record) => {
                   const activity = activities.find((item) => item.id === record.activityId)
+                  const tone = activity?.tone ?? iconToneFallback[record.activityIcon] ?? 'neutral'
+                  const detail = [
+                    record.durationSeconds ? formatDuration(record.durationSeconds) : `${record.amount}${record.unit}`,
+                    record.note,
+                  ].filter(Boolean).join(' · ')
                   return (
-                    <article className="record-row history-row" key={record.id}>
-                      <ActivityIcon icon={record.activityIcon} tone={activity?.tone} />
-                      <div className="record-row-main">
-                        <strong>{record.activityName}</strong>
-                        <span>
-                          {formatTime(record.recordedAt)}
-                          {record.durationSeconds ? ` · ${formatDuration(record.durationSeconds)}` : ''}
-                        </span>
-                        {record.note && <small className="record-note">{record.note}</small>}
-                      </div>
-                      <span className="record-amount">{record.amount} <small>{record.unit}</small></span>
-                      <div className="row-actions">
-                        <button className="icon-button small-icon-button" type="button" onClick={() => setEditor({ record })} aria-label={`编辑${record.activityName}`} title="编辑">
-                          <Pencil size={17} />
-                        </button>
-                        <button className="icon-button small-icon-button danger-button" type="button" onClick={() => void handleDelete(record)} aria-label={`删除${record.activityName}`} title="删除">
-                          <Trash2 size={17} />
-                        </button>
-                      </div>
-                    </article>
+                    <button
+                      className="history-row"
+                      type="button"
+                      key={record.id}
+                      onClick={() => setEditor({ record })}
+                      aria-label={`编辑${record.activityName}，${formatTime(record.recordedAt)}，${detail}`}
+                    >
+                      <time dateTime={record.recordedAt}>{formatTime(record.recordedAt)}</time>
+                      <span className={`history-marker tone-${tone}`} aria-hidden="true" />
+                      <strong>{record.activityName}</strong>
+                      <span className="history-detail">{detail}</span>
+                      <ChevronRight className="history-chevron" size={15} aria-hidden="true" />
+                    </button>
                   )
                 })}
               </div>
@@ -123,6 +130,7 @@ export function HistoryPage({ notify }: HistoryPageProps) {
           record={editor.record}
           onClose={() => setEditor(null)}
           onSaved={notify}
+          onDelete={editor.record ? () => handleDelete(editor.record!) : undefined}
         />
       )}
     </div>
