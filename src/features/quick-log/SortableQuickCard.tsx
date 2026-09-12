@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Clock3, GripVertical, Plus, TimerReset } from 'lucide-react'
+import { Clock3, Plus, TimerReset } from 'lucide-react'
 import { ActivityIcon } from '../../components/ActivityIcon'
 import type { ActiveSession, ActivityDefinition } from '../../domain/models'
 import { formatElapsed } from '../../utils/dateTime'
@@ -10,9 +10,10 @@ interface SortableQuickCardProps {
   session?: ActiveSession
   clock: number
   onOpen: () => void
+  canOpen: () => boolean
 }
 
-export function SortableQuickCard({ activity, session, clock, onOpen }: SortableQuickCardProps) {
+export function SortableQuickCard({ activity, session, clock, onOpen, canOpen }: SortableQuickCardProps) {
   const {
     attributes,
     isDragging,
@@ -32,8 +33,13 @@ export function SortableQuickCard({ activity, session, clock, onOpen }: Sortable
       <button
         className="quick-card-main"
         type="button"
-        onClick={onOpen}
+        onClick={() => {
+          if (canOpen()) onOpen()
+        }}
         aria-label={isRunning ? `结束${activity.name}` : `记录${activity.name}`}
+        title="点按记录，长按拖动排序"
+        {...attributes}
+        {...listeners}
       >
         <ActivityIcon icon={activity.icon} tone={activity.tone} size={25} />
         <span className="quick-card-copy">
@@ -47,16 +53,6 @@ export function SortableQuickCard({ activity, session, clock, onOpen }: Sortable
           </small>
         </span>
         {isRunning ? <TimerReset size={20} /> : activity.mode === 'timer' ? <Clock3 size={20} /> : <Plus size={20} />}
-      </button>
-      <button
-        className="quick-card-drag"
-        type="button"
-        aria-label={`拖动调整${activity.name}位置`}
-        title="拖动调整位置"
-        {...attributes}
-        {...listeners}
-      >
-        <GripVertical size={16} />
       </button>
     </article>
   )

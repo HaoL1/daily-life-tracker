@@ -267,6 +267,15 @@ h1, h2, h3, strong { overflow-wrap: anywhere; }
   border: 1px solid var(--cp-border);
   border-radius: 8px;
   background: var(--cp-surface);
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.quick-card * {
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 .quick-card.is-running { border-color: var(--cp-accent); background: var(--cp-accent-soft); }
 .quick-card.is-dragging {
@@ -285,9 +294,12 @@ h1, h2, h3, strong { overflow-wrap: anywhere; }
   gap: 10px;
   background: none;
   color: var(--cp-text-muted);
+  cursor: grab;
   text-align: left;
+  touch-action: manipulation;
 }
 .quick-card-main:hover { background: var(--cp-surface-soft); }
+.quick-card-main:active { cursor: grabbing; }
 .quick-card-copy { display: grid; min-width: 0; align-content: center; }
 .quick-card-copy strong, .quick-card-copy small { overflow: hidden; text-overflow: ellipsis; }
 .quick-card-copy strong {
@@ -305,24 +317,6 @@ h1, h2, h3, strong { overflow-wrap: anywhere; }
   -webkit-line-clamp: 3;
 }
 .quick-card-copy small { margin-top: 3px; color: var(--cp-text-muted); font-size: 12px; }
-.quick-card-drag {
-  position: absolute;
-  z-index: 2;
-  top: 3px;
-  right: 3px;
-  display: grid;
-  width: 40px;
-  height: 40px;
-  place-items: center;
-  border-radius: 7px;
-  background: var(--cp-sheen);
-  color: var(--cp-text-muted);
-  cursor: grab;
-  touch-action: none;
-}
-.quick-card-drag:hover { background: var(--cp-accent-soft); color: var(--cp-accent); }
-.quick-card-drag:active { cursor: grabbing; }
-
 .recent-section, .chart-section, .summary-section, .settings-section { padding-top: 24px; border-top: 1px solid var(--cp-border); }
 .record-list, .summary-list, .activity-settings-list {
   overflow: hidden;

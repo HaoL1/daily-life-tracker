@@ -1,8 +1,8 @@
 import {
   closestCenter,
   DndContext,
-  KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -11,11 +11,10 @@ import {
   arrayMove,
   rectSortingStrategy,
   SortableContext,
-  sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ActivityIcon } from '../../components/ActivityIcon'
 import { QuickEntryModal } from '../../components/QuickEntryModal'
 import { RecordEditor } from '../../components/RecordEditor'
@@ -56,9 +55,10 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
   const [quickEntryActivity, setQuickEntryActivity] = useState<ActivityDefinition | null>(null)
   const [showGeneralEditor, setShowGeneralEditor] = useState(false)
   const [clock, setClock] = useState(currentTimestamp)
+  const suppressCardOpenUntil = useRef(0)
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 350, tolerance: 8 } }),
   )
 
   useEffect(() => {
@@ -140,13 +140,27 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
         <div className="section-heading">
           <div>
             <p className="section-kicker">快速记录</p>
-            <h2 id="quick-actions-title">点一下，确认后记录</h2>
+            <h2 id="quick-actions-title">点按记录 · 长按拖动排序</h2>
           </div>
           <span className="section-count">{activities.length} 项</span>
         </div>
 
         {activities.length ? (
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(event) => void handleDragEnd(event)}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={() => {
+              suppressCardOpenUntil.current = Number.POSITIVE_INFINITY
+              navigator.vibrate?.(18)
+            }}
+            onDragCancel={() => {
+              suppressCardOpenUntil.current = currentTimestamp() + 350
+            }}
+            onDragEnd={(event) => {
+              suppressCardOpenUntil.current = currentTimestamp() + 350
+              void handleDragEnd(event)
+            }}
+          >
             <SortableContext items={activities.map((activity) => activity.id)} strategy={rectSortingStrategy}>
               <div className="quick-grid">
                 {activities.map((activity) => (
@@ -156,6 +170,7 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
                     session={activeSessions.find((item) => item.activityId === activity.id)}
                     clock={clock}
                     onOpen={() => setQuickEntryActivity(activity)}
+                    canOpen={() => currentTimestamp() >= suppressCardOpenUntil.current}
                   />
                 ))}
               </div>
