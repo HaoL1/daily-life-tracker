@@ -139,8 +139,7 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
       <section aria-labelledby="quick-actions-title">
         <div className="section-heading">
           <div>
-            <p className="section-kicker">快速记录</p>
-            <h2 id="quick-actions-title">点按记录 · 长按拖动排序</h2>
+            <p className="section-kicker" id="quick-actions-title">快速记录</p>
           </div>
           <span className="section-count">{activities.length} 项</span>
         </div>
@@ -187,7 +186,6 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
       <section className="recent-section" aria-labelledby="recent-title">
         <div className="section-heading">
           <div>
-            <p className="section-kicker">刚刚发生</p>
             <h2 id="recent-title">最近记录</h2>
           </div>
         </div>
