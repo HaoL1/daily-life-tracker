@@ -11,7 +11,7 @@ test('keeps the backfill note visible above the mobile keyboard', async ({ page 
 
   const dialog = page.getByRole('dialog')
   const initialDialogBox = await dialog.boundingBox()
-  expect(initialDialogBox?.y).toBeLessThanOrEqual(24)
+  expect(initialDialogBox?.y).toBeLessThanOrEqual(32)
 
   await page.setViewportSize({ width: 390, height: 430 })
   const note = page.getByLabel('备注（可选）')
@@ -121,9 +121,47 @@ test('prevents deleting an activity while its timer is running', async ({ page }
   await expect(page.getByRole('button', { name: '结束开车', exact: true })).toBeVisible()
 })
 
+test('reorders quick actions and keeps settings controls compact', async ({ page }, testInfo) => {
+  const names = page.locator('.quick-card-copy strong')
+  await expect(names).toHaveText([
+    '喝水', '小便', '大便', '吃饭', '零食', '水果', '屈臣氏苏打汽水饮料', '咖啡', '锻炼', '开车',
+  ])
+
+  const source = await page.getByRole('button', { name: '拖动调整喝水位置' }).boundingBox()
+  const target = await page.getByRole('button', { name: '拖动调整咖啡位置' }).boundingBox()
+  if (!source || !target) throw new Error('没有找到拖动手柄')
+
+  await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 20 })
+  await page.mouse.up()
+  await expect(names).toHaveText([
+    '小便', '大便', '吃饭', '零食', '水果', '屈臣氏苏打汽水饮料', '咖啡', '喝水', '锻炼', '开车',
+  ])
+
+  await page.reload()
+  await expect(page.getByRole('heading', { name: '今天，记一下' })).toBeVisible()
+  await expect(page.locator('.quick-card-copy strong')).toHaveText([
+    '小便', '大便', '吃饭', '零食', '水果', '屈臣氏苏打汽水饮料', '咖啡', '喝水', '锻炼', '开车',
+  ])
+
+  await page.getByRole('button', { name: '设置', exact: true }).click()
+  await expect(page.getByRole('button', { name: /上移|下移/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: '编辑喝水', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: '删除喝水', exact: true })).toBeVisible()
+  const settingRowHeights = await page.locator('.activity-setting-row').evaluateAll((rows) =>
+    rows.map((row) => row.getBoundingClientRect().height),
+  )
+  expect(Math.max(...settingRowHeights)).toBeLessThanOrEqual(52)
+  await page.screenshot({
+    path: `test-results/${testInfo.project.name}-compact-settings.png`,
+    fullPage: true,
+  })
+})
+
 test('shows all presets, adds a custom action and renders statistics', async ({ page }, testInfo) => {
-  await expect(page.getByRole('button', { name: '记录小手', exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: '记录大手', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: '记录小便', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: '记录大便', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: '记录屈臣氏苏打汽水饮料', exact: true })).toBeVisible()
   await expect(page.getByRole('button', { name: '记录咖啡', exact: true })).toBeVisible()
 

@@ -1,5 +1,20 @@
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  rectSortingStrategy,
+  SortableContext,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Clock3, Plus, TimerReset } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ActivityIcon } from '../../components/ActivityIcon'
 import { QuickEntryModal } from '../../components/QuickEntryModal'
@@ -8,9 +23,11 @@ import { db } from '../../db/database'
 import type { ActiveSession, ActivityDefinition } from '../../domain/models'
 import type { Notify } from '../../domain/ui'
 import { formatDuration } from '../../services/exportService'
+import { reorderActivities } from '../../services/activityService'
 import { recordInstant, startTimer, stopTimer, undoRecord } from '../../services/recordService'
 import { getPeriodRange } from '../../services/statisticsService'
-import { currentTimestamp, formatElapsed, formatFullDate, formatTime } from '../../utils/dateTime'
+import { currentTimestamp, formatFullDate, formatTime } from '../../utils/dateTime'
+import { SortableQuickCard } from './SortableQuickCard'
 
 interface QuickLogPageProps {
   notify: Notify
@@ -39,6 +56,10 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
   const [quickEntryActivity, setQuickEntryActivity] = useState<ActivityDefinition | null>(null)
   const [showGeneralEditor, setShowGeneralEditor] = useState(false)
   const [clock, setClock] = useState(currentTimestamp)
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
 
   useEffect(() => {
     if (!activeSessions.length) return
@@ -71,6 +92,22 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
       })
     }
     navigator.vibrate?.(12)
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = activities.findIndex((activity) => activity.id === active.id)
+    const newIndex = activities.findIndex((activity) => activity.id === over.id)
+    if (oldIndex < 0 || newIndex < 0) return
+
+    try {
+      const reordered = arrayMove(activities, oldIndex, newIndex)
+      await reorderActivities(reordered.map((activity) => activity.id))
+      navigator.vibrate?.(10)
+    } catch (caught) {
+      notify(caught instanceof Error ? caught.message : '排序保存失败，请重试')
+    }
   }
 
   return (
@@ -109,35 +146,21 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
         </div>
 
         {activities.length ? (
-          <div className="quick-grid">
-            {activities.map((activity) => {
-              const session = activeSessions.find((item) => item.activityId === activity.id)
-              const isRunning = Boolean(session)
-              return (
-                <article className={`quick-card ${isRunning ? 'is-running' : ''}`} key={activity.id}>
-                  <button
-                    className="quick-card-main"
-                    type="button"
-                    onClick={() => setQuickEntryActivity(activity)}
-                    aria-label={isRunning ? `结束${activity.name}` : `记录${activity.name}`}
-                  >
-                    <ActivityIcon icon={activity.icon} tone={activity.tone} size={25} />
-                    <span className="quick-card-copy">
-                      <strong className={activity.name.length > 7 ? 'long-name' : undefined}>{activity.name}</strong>
-                      <small>
-                        {session
-                          ? formatElapsed(session.startedAt, clock)
-                          : activity.mode === 'timer'
-                            ? '开始计时'
-                            : `+ ${activity.defaultAmount} ${activity.unit}`}
-                      </small>
-                    </span>
-                    {isRunning ? <TimerReset size={20} /> : activity.mode === 'timer' ? <Clock3 size={20} /> : <Plus size={20} />}
-                  </button>
-                </article>
-              )
-            })}
-          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(event) => void handleDragEnd(event)}>
+            <SortableContext items={activities.map((activity) => activity.id)} strategy={rectSortingStrategy}>
+              <div className="quick-grid">
+                {activities.map((activity) => (
+                  <SortableQuickCard
+                    key={activity.id}
+                    activity={activity}
+                    session={activeSessions.find((item) => item.activityId === activity.id)}
+                    clock={clock}
+                    onOpen={() => setQuickEntryActivity(activity)}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         ) : (
           <div className="empty-state">
             <p>还没有可用行为</p>

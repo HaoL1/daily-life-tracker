@@ -86,18 +86,11 @@ export async function deleteActivity(id: string): Promise<void> {
   })
 }
 
-export async function moveActivity(id: string, direction: -1 | 1): Promise<void> {
-  const activities = (await db.activities.toArray())
-    .filter((item) => !item.isArchived)
-    .sort((left, right) => left.sortOrder - right.sortOrder)
-  const currentIndex = activities.findIndex((item) => item.id === id)
-  const targetIndex = currentIndex + direction
-  if (currentIndex < 0 || targetIndex < 0 || targetIndex >= activities.length) return
-
-  const current = activities[currentIndex]
-  const target = activities[targetIndex]
+export async function reorderActivities(orderedIds: string[]): Promise<void> {
+  const timestamp = new Date().toISOString()
   await db.transaction('rw', db.activities, async () => {
-    await db.activities.update(current.id, { sortOrder: target.sortOrder })
-    await db.activities.update(target.id, { sortOrder: current.sortOrder })
+    await Promise.all(orderedIds.map((id, sortOrder) =>
+      db.activities.update(id, { sortOrder, updatedAt: timestamp }),
+    ))
   })
 }

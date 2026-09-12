@@ -56,14 +56,18 @@ export async function initializeDatabase(): Promise<void> {
       const availableDefaults = defaults.filter((activity) => !deletedActivityIds.has(activity.id))
       if (availableDefaults.length > 0) await db.activities.bulkAdd(availableDefaults)
     } else {
-      const legacyToilet = existingActivities.find(
-        (activity) => activity.id === 'preset-toilet' && activity.name === '上厕所',
-      )
-      if (legacyToilet) {
-        await db.activities.update(legacyToilet.id, {
-          name: '小手',
-          updatedAt: new Date().toISOString(),
-        })
+      const defaultRenames = [
+        { id: 'preset-toilet', previousNames: ['上厕所', '小手'], name: '小便' },
+        { id: 'preset-toilet-large', previousNames: ['大手'], name: '大便' },
+      ]
+      for (const rename of defaultRenames) {
+        const activity = existingActivities.find((item) => item.id === rename.id)
+        if (activity && rename.previousNames.includes(activity.name)) {
+          await db.activities.update(activity.id, {
+            name: rename.name,
+            updatedAt: new Date().toISOString(),
+          })
+        }
       }
 
       const existingIds = new Set(existingActivities.map((activity) => activity.id))

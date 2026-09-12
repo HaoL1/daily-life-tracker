@@ -269,6 +269,12 @@ h1, h2, h3, strong { overflow-wrap: anywhere; }
   background: var(--cp-surface);
 }
 .quick-card.is-running { border-color: var(--cp-accent); background: var(--cp-accent-soft); }
+.quick-card.is-dragging {
+  z-index: 5;
+  border-color: var(--cp-accent);
+  box-shadow: 0 0 0 2px var(--cp-highlight);
+  opacity: 0.88;
+}
 .quick-card-main {
   display: grid;
   width: 100%;
@@ -299,6 +305,23 @@ h1, h2, h3, strong { overflow-wrap: anywhere; }
   -webkit-line-clamp: 3;
 }
 .quick-card-copy small { margin-top: 3px; color: var(--cp-text-muted); font-size: 12px; }
+.quick-card-drag {
+  position: absolute;
+  z-index: 2;
+  top: 3px;
+  right: 3px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--cp-sheen);
+  color: var(--cp-text-muted);
+  cursor: grab;
+  touch-action: none;
+}
+.quick-card-drag:hover { background: var(--cp-accent-soft); color: var(--cp-accent); }
+.quick-card-drag:active { cursor: grabbing; }
 
 .recent-section, .chart-section, .summary-section, .settings-section { padding-top: 24px; border-top: 1px solid var(--cp-border); }
 .record-list, .summary-list, .activity-settings-list {
@@ -468,9 +491,27 @@ input:disabled, select:disabled { background: var(--cp-surface-soft); color: var
 .privacy-band > svg { flex: 0 0 auto; color: var(--cp-success); }
 .status-pill { flex: 0 0 auto; padding: 5px 7px; border: 1px solid var(--cp-warning); border-radius: 999px; color: var(--cp-warning) !important; font-size: 10px !important; font-weight: 800; }
 .status-pill.status-good { border-color: var(--cp-success); color: var(--cp-success) !important; }
-.activity-setting-row { min-height: 74px; }
+.activity-setting-row {
+  min-height: 48px;
+  padding: 6px 8px;
+  gap: 9px;
+}
+.activity-setting-marker {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  border-radius: 3px;
+  background: var(--cp-text-muted);
+}
+.activity-setting-marker.tone-accent { background: var(--cp-accent); }
+.activity-setting-marker.tone-link { background: var(--cp-link); }
+.activity-setting-marker.tone-success { background: var(--cp-success); }
+.activity-setting-marker.tone-warning { background: var(--cp-warning); }
+.activity-setting-marker.tone-danger { background: var(--cp-danger); }
+.activity-setting-copy strong { font-size: 13px; }
+.activity-setting-copy span { margin-top: 0; font-size: 11px; }
 .inline-status { display: inline-block; margin: 0 0 0 7px !important; color: var(--cp-accent) !important; font-size: 10px !important; font-weight: 800; }
-.settings-row-actions { gap: 2px; }
+.settings-row-actions { gap: 3px; }
 
 .selection-summary { margin: 10px 0 14px; color: var(--cp-text-muted); font-size: 12px; }
 .export-custom-range { margin-top: 10px; }
@@ -673,9 +714,6 @@ input:disabled, select:disabled { background: var(--cp-surface-soft); color: var
   .page-heading h1 { font-size: 31px; }
   .filter-bar, .export-controls { flex-wrap: wrap; }
   .filter-bar .compact-field, .export-controls .compact-field { flex-basis: calc(50% - 5px); }
-  .settings-row-actions { display: grid; grid-template-columns: repeat(2, 36px); }
-  .activity-setting-row { align-items: flex-start; }
-  .activity-setting-copy { padding-top: 3px; }
   .privacy-band { flex-wrap: wrap; }
   .privacy-band .status-pill { margin-left: 36px; }
   .backup-band { align-items: flex-start; flex-direction: column; }

@@ -21,7 +21,7 @@ export function createDefaultActivities(): ActivityDefinition[] {
     },
     {
       id: 'preset-toilet',
-      name: '小手',
+      name: '小便',
       icon: 'toilet',
       tone: 'neutral',
       mode: 'instant',
@@ -34,7 +34,7 @@ export function createDefaultActivities(): ActivityDefinition[] {
     },
     {
       id: 'preset-toilet-large',
-      name: '大手',
+      name: '大便',
       icon: 'toilet',
       tone: 'accent',
       mode: 'instant',

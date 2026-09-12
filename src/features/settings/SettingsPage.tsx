@@ -1,7 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
-  ArrowDown,
-  ArrowUp,
   HardDrive,
   Pencil,
   Plus,
@@ -11,11 +9,10 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ActivityEditor } from '../../components/ActivityEditor'
-import { ActivityIcon } from '../../components/ActivityIcon'
 import { db } from '../../db/database'
 import type { ActivityDefinition } from '../../domain/models'
 import type { Notify } from '../../domain/ui'
-import { deleteActivity, moveActivity } from '../../services/activityService'
+import { deleteActivity } from '../../services/activityService'
 import { requestPersistentStorage, type StorageStatus } from '../../services/storageService'
 import { DataExportPanel } from './DataExportPanel'
 
@@ -71,18 +68,16 @@ export function SettingsPage({ notify }: SettingsPageProps) {
           <button className="secondary-button compact-button" type="button" onClick={() => setEditor('new')}><Plus size={17} />添加</button>
         </div>
         <div className="activity-settings-list">
-          {visible.map((activity, index) => {
+          {visible.map((activity) => {
             const running = activeSessions.some((session) => session.activityId === activity.id)
             return (
               <article className="activity-setting-row" key={activity.id}>
-                <ActivityIcon icon={activity.icon} tone={activity.tone} />
+                <span className={`activity-setting-marker tone-${activity.tone}`} aria-hidden="true" />
                 <div className="activity-setting-copy">
                   <strong>{activity.name}{running && <span className="inline-status">计时中</span>}</strong>
                   <span>{activity.mode === 'timer' ? '开始 / 结束计时' : `默认 ${activity.defaultAmount} ${activity.unit}`}</span>
                 </div>
                 <div className="row-actions settings-row-actions">
-                  <button className="icon-button small-icon-button" type="button" disabled={index === 0} onClick={() => void moveActivity(activity.id, -1)} aria-label={`上移${activity.name}`} title="上移"><ArrowUp size={17} /></button>
-                  <button className="icon-button small-icon-button" type="button" disabled={index === visible.length - 1} onClick={() => void moveActivity(activity.id, 1)} aria-label={`下移${activity.name}`} title="下移"><ArrowDown size={17} /></button>
                   <button className="icon-button small-icon-button" type="button" onClick={() => setEditor(activity)} aria-label={`编辑${activity.name}`} title="编辑"><Pencil size={17} /></button>
                   <button className="icon-button small-icon-button danger-button" type="button" onClick={() => void remove(activity)} aria-label={`删除${activity.name}`} title="删除"><Trash2 size={17} /></button>
                 </div>

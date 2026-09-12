@@ -7,11 +7,13 @@ describe('default activities', () => {
 
     expect(activities).toHaveLength(10)
     expect(activities.find((activity) => activity.name === '上厕所')).toBeUndefined()
-    expect(activities.find((activity) => activity.name === '小手')).toMatchObject({
+    expect(activities.find((activity) => activity.name === '小手')).toBeUndefined()
+    expect(activities.find((activity) => activity.name === '大手')).toBeUndefined()
+    expect(activities.find((activity) => activity.name === '小便')).toMatchObject({
       defaultAmount: '1',
       unit: '次',
     })
-    expect(activities.find((activity) => activity.name === '大手')).toMatchObject({
+    expect(activities.find((activity) => activity.name === '大便')).toMatchObject({
       defaultAmount: '1',
       unit: '次',
     })
