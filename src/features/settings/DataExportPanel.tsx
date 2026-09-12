@@ -11,14 +11,10 @@ import {
   downloadTextFile,
 } from '../../services/exportService'
 import {
-  getPeriodRange,
   summarizeRecords,
-  type DateRange,
-  type PeriodKind,
 } from '../../services/statisticsService'
 import { toDateInput } from '../../utils/dateTime'
-
-type ExportRange = PeriodKind | 'all'
+import { resolveRange, type ExportRange } from './exportRange'
 
 interface DataExportPanelProps {
   notify: Notify
@@ -28,7 +24,7 @@ export function DataExportPanel({ notify }: DataExportPanelProps) {
   const records = useLiveQuery(() => db.records.toArray(), [], [])
   const activities = useLiveQuery(() => db.activities.orderBy('sortOrder').toArray(), [], [])
   const settings = useLiveQuery(() => db.settings.get('app'), [], undefined)
-  const [rangeType, setRangeType] = useState<ExportRange>('month')
+  const [rangeType, setRangeType] = useState<ExportRange>('day')
   const [activityId, setActivityId] = useState('all')
   const [customStart, setCustomStart] = useState(toDateInput(new Date()))
   const [customEnd, setCustomEnd] = useState(toDateInput(new Date()))
@@ -123,6 +119,7 @@ export function DataExportPanel({ notify }: DataExportPanelProps) {
         <label className="compact-field">
           <span>范围</span>
           <select value={rangeType} onChange={(event) => setRangeType(event.target.value as ExportRange)}>
+            <option value="yesterday">昨天</option>
             <option value="day">今天</option>
             <option value="week">本周</option>
             <option value="month">本月</option>
@@ -184,27 +181,4 @@ export function DataExportPanel({ notify }: DataExportPanelProps) {
       </div>
     </section>
   )
-}
-
-function resolveRange(
-  type: ExportRange,
-  records: Array<{ recordedAt: string }>,
-  customStart: string,
-  customEnd: string,
-): DateRange {
-  if (type === 'all') {
-    if (!records.length) return getPeriodRange('day', new Date())
-    const timestamps = records.map((record) => new Date(record.recordedAt).getTime())
-    return getPeriodRange('custom', new Date(), {
-      start: new Date(Math.min(...timestamps)),
-      end: new Date(Math.max(...timestamps)),
-    })
-  }
-  if (type === 'custom') {
-    return getPeriodRange('custom', new Date(), {
-      start: new Date(`${customStart}T12:00:00`),
-      end: new Date(`${customEnd}T12:00:00`),
-    })
-  }
-  return getPeriodRange(type, new Date())
 }
