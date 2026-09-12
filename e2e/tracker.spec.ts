@@ -5,6 +5,57 @@ test.beforeEach(async ({ page }) => {
   await expect(page.getByRole('heading', { name: '今天，记一下' })).toBeVisible()
 })
 
+test('long-presses and glides across the glass navigation', async ({ page }, testInfo) => {
+  const nav = page.getByRole('navigation', { name: '主要导航' })
+  const start = await nav.getByRole('button', { name: '记录', exact: true }).boundingBox()
+  const target = await nav.getByRole('button', { name: '统计', exact: true }).boundingBox()
+  if (!start || !target) throw new Error('没有找到导航标签')
+
+  const startX = start.x + start.width / 2
+  const startY = start.y + start.height / 2
+  const endX = target.x + target.width / 2
+  const endY = target.y + target.height / 2
+
+  if (testInfo.project.name === 'iphone-viewport') {
+    const cdp = await page.context().newCDPSession(page)
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ x: startX, y: startY, id: 1 }],
+    })
+    await page.waitForTimeout(360)
+    await expect(nav).toHaveClass(/is-gliding/)
+    for (let step = 1; step <= 12; step += 1) {
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{
+          x: startX + (endX - startX) * step / 12,
+          y: startY + (endY - startY) * step / 12,
+          id: 1,
+        }],
+      })
+    }
+    await expect(nav.getByRole('button', { name: '统计', exact: true })).toHaveClass(/active/)
+    const glass = await nav.evaluate((element) => ({
+      background: getComputedStyle(element, '::before').backgroundImage,
+      blur: getComputedStyle(element, '::before').backdropFilter,
+    }))
+    expect(glass.background).toContain('gradient')
+    expect(glass.blur).toContain('blur')
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  } else {
+    await page.mouse.move(startX, startY)
+    await page.mouse.down()
+    await page.waitForTimeout(360)
+    await expect(nav).toHaveClass(/is-gliding/)
+    await page.mouse.move(endX, endY, { steps: 12 })
+    await page.mouse.up()
+  }
+
+  await expect(page.getByRole('heading', { name: '看看最近的节奏' })).toBeVisible()
+  expect(await page.evaluate(() => window.getSelection()?.toString() ?? '')).toBe('')
+  await expect(nav).not.toHaveClass(/is-gliding/)
+})
+
 test('keeps the backfill note visible above the mobile keyboard', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.getByRole('button', { name: '补录' }).click()

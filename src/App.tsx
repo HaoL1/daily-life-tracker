@@ -1,10 +1,19 @@
 import { BarChart3, Clock3, History, Settings } from 'lucide-react'
-import { lazy, Suspense, useEffect, useState } from 'react'
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 import { UpdatePrompt } from './components/UpdatePrompt'
 import { initializeDatabase } from './db/database'
 import type { NoticeAction, Notify } from './domain/ui'
 import { HistoryPage } from './features/history/HistoryPage'
 import { QuickLogPage } from './features/quick-log/QuickLogPage'
+import { currentTimestamp } from './utils/dateTime'
 
 const SettingsPage = lazy(() =>
   import('./features/settings/SettingsPage').then((module) => ({ default: module.SettingsPage })),
@@ -28,11 +37,31 @@ const navigation = [
   { id: 'settings' as const, label: '设置', icon: Settings },
 ]
 
+const NAV_LONG_PRESS_MS = 320
+const NAV_GESTURE_TOLERANCE = 10
+
+interface NavPointerState {
+  pointerId: number
+  startX: number
+  startY: number
+  lastX: number
+  startTab: Tab
+}
+
 function App() {
   const [ready, setReady] = useState(false)
   const [startupError, setStartupError] = useState('')
   const [activeTab, setActiveTab] = useState<Tab>('log')
   const [notice, setNotice] = useState<Notice | null>(null)
+  const [navGliding, setNavGliding] = useState(false)
+  const [navPreviewTab, setNavPreviewTab] = useState<Tab>('log')
+  const [navGlideOffset, setNavGlideOffset] = useState(0)
+  const navRef = useRef<HTMLElement>(null)
+  const navPressTimerRef = useRef<number | null>(null)
+  const navPointerRef = useRef<NavPointerState | null>(null)
+  const navGestureActiveRef = useRef(false)
+  const navPreviewRef = useRef<Tab>('log')
+  const suppressNavClickUntilRef = useRef(0)
 
   useEffect(() => {
     void initializeDatabase()
@@ -46,9 +75,115 @@ function App() {
     return () => window.clearTimeout(timeout)
   }, [notice])
 
+  useEffect(() => () => {
+    if (navPressTimerRef.current !== null) window.clearTimeout(navPressTimerRef.current)
+  }, [])
+
   const notify: Notify = (message, action) => {
     setNotice({ id: Date.now(), message, action })
   }
+
+  function clearNavPressTimer() {
+    if (navPressTimerRef.current === null) return
+    window.clearTimeout(navPressTimerRef.current)
+    navPressTimerRef.current = null
+  }
+
+  function getNavGesturePosition(clientX: number) {
+    const nav = navRef.current
+    if (!nav) return null
+    const bounds = nav.getBoundingClientRect()
+    const inset = 6
+    const usableWidth = Math.max(1, bounds.width - inset * 2)
+    const segmentWidth = usableWidth / navigation.length
+    const localX = Math.max(0, Math.min(clientX - bounds.left - inset, usableWidth - 0.01))
+    const index = Math.max(0, Math.min(Math.floor(localX / segmentWidth), navigation.length - 1))
+    const offset = Math.max(0, Math.min(localX - segmentWidth / 2, usableWidth - segmentWidth))
+    return { tab: navigation[index].id, offset }
+  }
+
+  function updateNavGesture(clientX: number) {
+    const position = getNavGesturePosition(clientX)
+    if (!position) return
+    navPreviewRef.current = position.tab
+    setNavPreviewTab(position.tab)
+    setNavGlideOffset(position.offset)
+  }
+
+  function handleNavPointerDown(event: ReactPointerEvent<HTMLElement>) {
+    if (event.button !== 0) return
+    const target = event.target as HTMLElement
+    const button = target.closest<HTMLButtonElement>('button[data-tab]')
+    if (!button || !event.currentTarget.contains(button)) return
+    const startTab = button.dataset.tab as Tab
+
+    clearNavPressTimer()
+    navGestureActiveRef.current = false
+    navPreviewRef.current = startTab
+    navPointerRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      lastX: event.clientX,
+      startTab,
+    }
+
+    navPressTimerRef.current = window.setTimeout(() => {
+      const pointer = navPointerRef.current
+      if (!pointer) return
+      navPressTimerRef.current = null
+      navGestureActiveRef.current = true
+      setNavGliding(true)
+      updateNavGesture(pointer.lastX)
+      navRef.current?.setPointerCapture(pointer.pointerId)
+      navigator.vibrate?.(18)
+    }, NAV_LONG_PRESS_MS)
+  }
+
+  function handleNavPointerMove(event: ReactPointerEvent<HTMLElement>) {
+    const pointer = navPointerRef.current
+    if (!pointer || pointer.pointerId !== event.pointerId) return
+    pointer.lastX = event.clientX
+
+    if (!navGestureActiveRef.current) {
+      const distance = Math.hypot(event.clientX - pointer.startX, event.clientY - pointer.startY)
+      if (distance > NAV_GESTURE_TOLERANCE) {
+        clearNavPressTimer()
+        navPointerRef.current = null
+      }
+      return
+    }
+
+    event.preventDefault()
+    updateNavGesture(event.clientX)
+  }
+
+  function finishNavGesture(event: ReactPointerEvent<HTMLElement>) {
+    const pointer = navPointerRef.current
+    if (!pointer || pointer.pointerId !== event.pointerId) return
+    clearNavPressTimer()
+
+    if (navGestureActiveRef.current) {
+      event.preventDefault()
+      setActiveTab(navPreviewRef.current)
+      suppressNavClickUntilRef.current = currentTimestamp() + 350
+      navigator.vibrate?.(10)
+    }
+
+    if (navRef.current?.hasPointerCapture(event.pointerId)) {
+      navRef.current.releasePointerCapture(event.pointerId)
+    }
+    navGestureActiveRef.current = false
+    navPointerRef.current = null
+    setNavGliding(false)
+  }
+
+  const selectedNavTab = navGliding ? navPreviewTab : activeTab
+  const selectedNavIndex = navigation.findIndex((item) => item.id === selectedNavTab)
+  const navStyle = {
+    '--nav-selection-index': String(selectedNavIndex),
+    '--nav-glide-offset': `${navGlideOffset}px`,
+  } as CSSProperties
 
   if (startupError) {
     return (
@@ -88,18 +223,32 @@ function App() {
         </Suspense>
       </main>
 
-      <nav className="bottom-nav" aria-label="主要导航">
+      <nav
+        ref={navRef}
+        className={`bottom-nav ${navGliding ? 'is-gliding' : ''}`}
+        aria-label="主要导航"
+        style={navStyle}
+        onPointerDown={handleNavPointerDown}
+        onPointerMove={handleNavPointerMove}
+        onPointerUp={finishNavGesture}
+        onPointerCancel={finishNavGesture}
+        onContextMenu={(event) => event.preventDefault()}
+      >
         {navigation.map((item) => {
           const Icon = item.icon
           return (
             <button
               type="button"
               key={item.id}
-              className={activeTab === item.id ? 'active' : ''}
-              onClick={() => setActiveTab(item.id)}
+              data-tab={item.id}
+              className={selectedNavTab === item.id ? 'active' : ''}
+              onClick={() => {
+                if (currentTimestamp() < suppressNavClickUntilRef.current) return
+                setActiveTab(item.id)
+              }}
               aria-current={activeTab === item.id ? 'page' : undefined}
             >
-              <Icon size={21} strokeWidth={activeTab === item.id ? 2.4 : 2} />
+              <Icon size={21} strokeWidth={selectedNavTab === item.id ? 2.4 : 2} />
               <span>{item.label}</span>
             </button>
           )
