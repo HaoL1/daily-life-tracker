@@ -20,8 +20,8 @@ import { RecordEditor } from '../../components/RecordEditor'
 import { db } from '../../db/database'
 import type { ActiveSession, ActivityDefinition } from '../../domain/models'
 import type { Notify } from '../../domain/ui'
+import { deleteActivity, reorderActivities } from '../../services/activityService'
 import { formatDuration } from '../../services/exportService'
-import { reorderActivities } from '../../services/activityService'
 import { recordInstant, startTimer, stopTimer, undoRecord } from '../../services/recordService'
 import { getPeriodRange } from '../../services/statisticsService'
 import { currentTimestamp, formatFullDate } from '../../utils/dateTime'
@@ -51,6 +51,7 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
     return counts
   }, {})
   const [quickEntryActivity, setQuickEntryActivity] = useState<ActivityDefinition | null>(null)
+  const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null)
   const [showGeneralEditor, setShowGeneralEditor] = useState(false)
   const [clock, setClock] = useState(currentTimestamp)
   const suppressCardOpenUntil = useRef(0)
@@ -108,6 +109,22 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
     }
   }
 
+  async function remove(activity: ActivityDefinition) {
+    const recordCount = await db.records.where('activityId').equals(activity.id).count()
+    const historyMessage = recordCount
+      ? `已有 ${recordCount} 条历史记录会继续保留。`
+      : '这个行为还没有历史记录。'
+    if (!window.confirm(`从首页删除“${activity.name}”？\n\n${historyMessage}\n此操作无法撤销。`)) return
+
+    try {
+      await deleteActivity(activity.id)
+      setSelectedActivityId(null)
+      notify(`“${activity.name}”已删除，历史记录仍会保留`)
+    } catch (caught) {
+      notify(caught instanceof Error ? caught.message : '操作失败，请重试')
+    }
+  }
+
   return (
     <div className="page quick-page">
       <header className="page-heading quick-heading">
@@ -139,7 +156,8 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
-            onDragStart={() => {
+            onDragStart={({ active }) => {
+              setSelectedActivityId(String(active.id))
               suppressCardOpenUntil.current = Number.POSITIVE_INFINITY
               navigator.vibrate?.(18)
             }}
@@ -160,7 +178,13 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
                     session={activeSessions.find((item) => item.activityId === activity.id)}
                     clock={clock}
                     todayCount={todayRecordCounts[activity.id] ?? 0}
-                    onOpen={() => setQuickEntryActivity(activity)}
+                    isSelected={selectedActivityId === activity.id}
+                    onOpen={() => {
+                      setSelectedActivityId(null)
+                      setQuickEntryActivity(activity)
+                    }}
+                    onSelect={() => setSelectedActivityId(activity.id)}
+                    onDelete={() => void remove(activity)}
                     canOpen={() => currentTimestamp() >= suppressCardOpenUntil.current}
                   />
                 ))}

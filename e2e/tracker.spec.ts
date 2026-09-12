@@ -133,23 +133,50 @@ test('confirms measurements and notes before saving records', async ({ page }, t
   })
 })
 
-test('deletes an activity permanently while preserving its history', async ({ page }) => {
+test('deletes an activity from quick log and keeps settings in sync', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: '记录咖啡', exact: true }).click()
   await page.getByLabel('备注（可选）').fill('上午美式')
   await page.getByRole('button', { name: '确认记录' }).click()
   await expect(page.getByText('已记录 咖啡 1 次')).toBeVisible()
 
-  await page.getByRole('button', { name: '设置', exact: true }).click()
+  const coffeeCard = page.getByRole('button', { name: '记录咖啡', exact: true })
+  const box = await coffeeCard.boundingBox()
+  if (!box) throw new Error('没有找到咖啡行为卡片')
+
+  const centerX = box.x + box.width / 2
+  const centerY = box.y + box.height / 2
+
+  if (testInfo.project.name === 'iphone-viewport') {
+    const cdp = await page.context().newCDPSession(page)
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ x: centerX, y: centerY, id: 1 }],
+    })
+    await page.waitForTimeout(500)
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  } else {
+    await page.mouse.move(centerX, centerY)
+    await page.mouse.down()
+    await page.waitForTimeout(500)
+    await page.mouse.up()
+  }
+
+  const deleteButton = page.getByRole('button', { name: '删除咖啡', exact: true })
+  await expect(deleteButton).toBeVisible()
   page.once('dialog', async (dialog) => {
     expect(dialog.message()).toContain('已有 1 条历史记录会继续保留')
     expect(dialog.message()).toContain('此操作无法撤销')
     await dialog.accept()
   })
-  await page.getByRole('button', { name: '删除咖啡', exact: true }).click()
+  await deleteButton.click()
   await expect(page.getByText('“咖啡”已删除，历史记录仍会保留')).toBeVisible()
+  await expect(page.getByRole('button', { name: '记录咖啡', exact: true })).toHaveCount(0)
+
+  await page.getByRole('button', { name: '设置', exact: true }).click()
+  await expect(page.getByRole('button', { name: '编辑咖啡', exact: true })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: '删除咖啡', exact: true })).toHaveCount(0)
 
   await page.getByRole('button', { name: '记录', exact: true }).click()
-  await expect(page.getByRole('button', { name: '记录咖啡', exact: true })).toHaveCount(0)
   await page.reload()
   await expect(page.getByRole('heading', { name: '今天，记一下' })).toBeVisible()
   await expect(page.getByRole('button', { name: '记录咖啡', exact: true })).toHaveCount(0)
