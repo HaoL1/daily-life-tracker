@@ -52,6 +52,10 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
     [todayRange.start.toISOString(), todayRange.end.toISOString()],
     [],
   )
+  const todayRecordCounts = todayRecords.reduce<Record<string, number>>((counts, record) => {
+    counts[record.activityId] = (counts[record.activityId] ?? 0) + 1
+    return counts
+  }, {})
   const [quickEntryActivity, setQuickEntryActivity] = useState<ActivityDefinition | null>(null)
   const [showGeneralEditor, setShowGeneralEditor] = useState(false)
   const [clock, setClock] = useState(currentTimestamp)
@@ -168,6 +172,7 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
                     activity={activity}
                     session={activeSessions.find((item) => item.activityId === activity.id)}
                     clock={clock}
+                    todayCount={todayRecordCounts[activity.id] ?? 0}
                     onOpen={() => setQuickEntryActivity(activity)}
                     canOpen={() => currentTimestamp() >= suppressCardOpenUntil.current}
                   />

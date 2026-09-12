@@ -9,11 +9,19 @@ interface SortableQuickCardProps {
   activity: ActivityDefinition
   session?: ActiveSession
   clock: number
+  todayCount: number
   onOpen: () => void
   canOpen: () => boolean
 }
 
-export function SortableQuickCard({ activity, session, clock, onOpen, canOpen }: SortableQuickCardProps) {
+export function SortableQuickCard({
+  activity,
+  session,
+  clock,
+  todayCount,
+  onOpen,
+  canOpen,
+}: SortableQuickCardProps) {
   const {
     attributes,
     isDragging,
@@ -23,6 +31,13 @@ export function SortableQuickCard({ activity, session, clock, onOpen, canOpen }:
     transition,
   } = useSortable({ id: activity.id })
   const isRunning = Boolean(session)
+  const statusLabel = isRunning ? '进行中' : activity.mode === 'timer' ? '计时' : '即时'
+  const helperText = session
+    ? `${formatElapsed(session.startedAt, clock)} · 点按结束并保存`
+    : activity.mode === 'timer'
+      ? '点按开始计时'
+      : `默认 +${activity.defaultAmount} ${activity.unit}`
+  const actionIcon = isRunning ? <TimerReset size={20} /> : activity.mode === 'timer' ? <Clock3 size={20} /> : <Plus size={20} />
 
   return (
     <article
@@ -44,18 +59,22 @@ export function SortableQuickCard({ activity, session, clock, onOpen, canOpen }:
         onContextMenu={(event) => event.preventDefault()}
         onDragStart={(event) => event.preventDefault()}
       >
-        <ActivityIcon icon={activity.icon} tone={activity.tone} size={25} />
-        <span className="quick-card-copy">
-          <strong className={activity.name.length > 7 ? 'long-name' : undefined}>{activity.name}</strong>
-          <small>
-            {session
-              ? formatElapsed(session.startedAt, clock)
-              : activity.mode === 'timer'
-                ? '开始计时'
-                : `+ ${activity.defaultAmount} ${activity.unit}`}
-          </small>
+        <span className="quick-card-header">
+          <span className={`quick-card-chip quick-card-status ${isRunning ? 'is-running' : ''}`}>
+            {statusLabel}
+          </span>
+          <span className="quick-card-chip quick-card-count" aria-label={`${activity.name}今天已完成${todayCount}次`}>
+            今日 {todayCount}次
+          </span>
         </span>
-        {isRunning ? <TimerReset size={20} /> : activity.mode === 'timer' ? <Clock3 size={20} /> : <Plus size={20} />}
+        <span className="quick-card-body">
+          <ActivityIcon icon={activity.icon} tone={activity.tone} size={25} />
+          <span className="quick-card-copy">
+            <strong className={activity.name.length > 7 ? 'long-name' : undefined}>{activity.name}</strong>
+            <small>{helperText}</small>
+          </span>
+          <span className="quick-card-action" aria-hidden="true">{actionIcon}</span>
+        </span>
       </button>
     </article>
   )

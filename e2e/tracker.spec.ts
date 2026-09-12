@@ -86,7 +86,10 @@ test('keeps the backfill note visible above the mobile keyboard', async ({ page 
 
 test('confirms measurements and notes before saving records', async ({ page }, testInfo) => {
   const recentSection = page.locator('section[aria-labelledby="recent-title"]')
+  const waterCard = page.getByRole('button', { name: '记录喝水', exact: true })
+  const exerciseCard = page.getByRole('button', { name: '记录锻炼', exact: true })
 
+  await expect(waterCard.getByText(/今日\s*0次/)).toBeVisible()
   await page.getByRole('button', { name: '记录喝水', exact: true }).click()
   await expect(page.getByRole('heading', { name: '记录喝水' })).toBeVisible()
   await expect(page.getByLabel('计量')).toHaveValue('250')
@@ -96,9 +99,11 @@ test('confirms measurements and notes before saving records', async ({ page }, t
   await page.getByLabel('备注（可选）').fill('早餐后喝的温水')
   await page.getByRole('button', { name: '确认记录' }).click()
   await expect(page.getByText('已记录 喝水 300 ml')).toBeVisible()
+  await expect(waterCard.getByText(/今日\s*1次/)).toBeVisible()
   await expect(recentSection.getByText('喝水', { exact: true })).toBeVisible()
   await expect(recentSection.getByText('早餐后喝的温水')).toBeVisible()
 
+  await expect(exerciseCard.getByText(/今日\s*0次/)).toBeVisible()
   await page.getByRole('button', { name: '记录锻炼', exact: true }).click()
   await expect(page.getByRole('heading', { name: '开始锻炼' })).toBeVisible()
   await page.getByLabel('备注（可选）').fill('跑步 5 公里和拉伸')
@@ -111,6 +116,7 @@ test('confirms measurements and notes before saving records', async ({ page }, t
   await expect(page.getByLabel('备注（可选）')).toHaveValue('跑步 5 公里和拉伸')
   await page.getByRole('button', { name: '结束并保存' }).click()
   await expect(page.getByText(/锻炼已结束/)).toBeVisible()
+  await expect(exerciseCard.getByText(/今日\s*1次/)).toBeVisible()
 
   await page.getByRole('button', { name: '历史', exact: true }).click()
   await expect(page.getByRole('heading', { name: '历史记录' })).toBeVisible()
