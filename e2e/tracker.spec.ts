@@ -127,19 +127,52 @@ test('reorders quick actions and keeps settings controls compact', async ({ page
     '喝水', '小便', '大便', '吃饭', '零食', '水果', '屈臣氏苏打汽水饮料', '咖啡', '锻炼', '开车',
   ])
 
-  await expect(page.getByRole('button', { name: /拖动调整/ })).toHaveCount(0)
-  const source = await page.getByRole('button', { name: '记录喝水', exact: true }).boundingBox()
+  await expect(page.locator('.quick-card-drag')).toHaveCount(0)
+  const sourceCard = page.getByRole('button', { name: '记录喝水', exact: true })
+  await expect(sourceCard).toHaveCSS('user-select', 'none')
+  const source = await sourceCard.boundingBox()
   const target = await page.getByRole('button', { name: '记录咖啡', exact: true }).boundingBox()
   if (!source || !target) throw new Error('没有找到行为卡片')
 
-  await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2)
-  await page.mouse.down()
-  await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 20 })
-  await page.mouse.up()
+  const startX = source.x + source.width / 2
+  const startY = source.y + source.height / 2
+  const endX = target.x + target.width / 2
+  const endY = target.y + target.height / 2
+
+  if (testInfo.project.name === 'iphone-viewport') {
+    const cdp = await page.context().newCDPSession(page)
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ x: startX, y: startY, id: 1 }],
+    })
+    await page.waitForTimeout(400)
+    for (let step = 1; step <= 16; step += 1) {
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{
+          x: startX + (endX - startX) * step / 16,
+          y: startY + (endY - startY) * step / 16,
+          id: 1,
+        }],
+      })
+    }
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  } else {
+    await page.mouse.move(startX, startY)
+    await page.mouse.down()
+    await page.mouse.move(endX, endY, { steps: 20 })
+    await page.mouse.up()
+  }
+
   await expect(page.getByRole('heading', { name: '记录喝水' })).toHaveCount(0)
+  expect(await page.evaluate(() => window.getSelection()?.toString() ?? '')).toBe('')
   await expect(names).toHaveText([
     '小便', '大便', '吃饭', '零食', '水果', '屈臣氏苏打汽水饮料', '咖啡', '喝水', '锻炼', '开车',
   ])
+  await page.waitForTimeout(400)
+  await page.getByRole('button', { name: '记录喝水', exact: true }).click()
+  await expect(page.getByRole('heading', { name: '记录喝水' })).toBeVisible()
+  await page.getByRole('button', { name: '关闭' }).click()
 
   await page.reload()
   await expect(page.getByRole('heading', { name: '今天，记一下' })).toBeVisible()

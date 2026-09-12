@@ -40,6 +40,9 @@ export function SortableQuickCard({ activity, session, clock, onOpen, canOpen }:
         title="点按记录，长按拖动排序"
         {...attributes}
         {...listeners}
+        draggable={false}
+        onContextMenu={(event) => event.preventDefault()}
+        onDragStart={(event) => event.preventDefault()}
       >
         <ActivityIcon icon={activity.icon} tone={activity.tone} size={25} />
         <span className="quick-card-copy">
