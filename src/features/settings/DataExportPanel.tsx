@@ -110,7 +110,12 @@ export function DataExportPanel({ notify }: DataExportPanelProps) {
   }
 
   return (
-    <section className="settings-section" aria-labelledby="export-title">
+    <section
+      id="export-and-backup"
+      className="settings-section export-section"
+      aria-labelledby="export-title"
+      tabIndex={-1}
+    >
       <div className="section-heading">
         <div><p className="section-kicker">带走你的数据</p><h2 id="export-title">导出与备份</h2></div>
       </div>

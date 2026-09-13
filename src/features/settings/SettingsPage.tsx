@@ -23,9 +23,11 @@ import { DataExportPanel } from './DataExportPanel'
 
 interface SettingsPageProps {
   notify: Notify
+  initialSection?: 'export' | null
+  onInitialSectionHandled?: () => void
 }
 
-export function SettingsPage({ notify }: SettingsPageProps) {
+export function SettingsPage({ notify, initialSection, onInitialSectionHandled }: SettingsPageProps) {
   const activities = useLiveQuery(() => db.activities.orderBy('sortOrder').toArray(), [], [])
   const activeSessions = useLiveQuery(() => db.activeSessions.toArray(), [], [])
   const [editor, setEditor] = useState<ActivityDefinition | 'new' | null>(null)
@@ -38,6 +40,17 @@ export function SettingsPage({ notify }: SettingsPageProps) {
       setStorage({ supported: false, persistent: false })
     })
   }, [])
+
+  useEffect(() => {
+    if (initialSection !== 'export') return
+    const frame = window.requestAnimationFrame(() => {
+      const exportSection = document.getElementById('export-and-backup')
+      exportSection?.focus({ preventScroll: true })
+      exportSection?.scrollIntoView({ block: 'start' })
+      onInitialSectionHandled?.()
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [initialSection, onInitialSectionHandled])
 
   async function remove(activity: ActivityDefinition) {
     const recordCount = await db.records.where('activityId').equals(activity.id).count()

@@ -133,6 +133,21 @@ test('confirms measurements and notes before saving records', async ({ page }, t
   })
 })
 
+test('opens export and backup directly from history', async ({ page }) => {
+  await page.getByRole('button', { name: '历史', exact: true }).click()
+  await page.getByRole('button', { name: '导出', exact: true }).click()
+
+  const exportSection = page.locator('#export-and-backup')
+  await expect(page.getByRole('heading', { name: '导出与备份' })).toBeVisible()
+  await expect(page.getByRole('navigation', { name: '主要导航' })
+    .getByRole('button', { name: '设置', exact: true })).toHaveAttribute('aria-current', 'page')
+  await expect(exportSection).toBeFocused()
+  await expect.poll(async () => exportSection.evaluate((element) => {
+    const bounds = element.getBoundingClientRect()
+    return bounds.top >= 0 && bounds.top < window.innerHeight
+  })).toBe(true)
+})
+
 test('restores and permanently deletes activities from the deleted section', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: '记录咖啡', exact: true }).click()
   await page.getByLabel('备注（可选）').fill('上午美式')

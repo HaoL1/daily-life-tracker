@@ -2,6 +2,7 @@ import { BarChart3, Clock3, History, Settings } from 'lucide-react'
 import {
   lazy,
   Suspense,
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -24,6 +25,7 @@ const SettingsPage = lazy(loadSettingsPage)
 const StatisticsPage = lazy(loadStatisticsPage)
 
 type Tab = 'log' | 'history' | 'statistics' | 'settings'
+type SettingsSection = 'export'
 
 interface Notice {
   id: number
@@ -53,6 +55,7 @@ function App() {
   const [ready, setReady] = useState(false)
   const [startupError, setStartupError] = useState('')
   const [activeTab, setActiveTab] = useState<Tab>('log')
+  const [settingsSection, setSettingsSection] = useState<SettingsSection | null>(null)
   const [notice, setNotice] = useState<Notice | null>(null)
   const [navGliding, setNavGliding] = useState(false)
   const [navPreviewTab, setNavPreviewTab] = useState<Tab>('log')
@@ -82,6 +85,19 @@ function App() {
 
   const notify: Notify = (message, action) => {
     setNotice({ id: Date.now(), message, action })
+  }
+
+  const clearSettingsSection = useCallback(() => setSettingsSection(null), [])
+
+  function selectTab(tab: Tab) {
+    setSettingsSection(null)
+    setActiveTab(tab)
+  }
+
+  function openExportSettings() {
+    void loadSettingsPage()
+    setSettingsSection('export')
+    setActiveTab('settings')
   }
 
   function clearNavPressTimer() {
@@ -169,7 +185,7 @@ function App() {
 
     if (navGestureActiveRef.current) {
       event.preventDefault()
-      setActiveTab(navPreviewRef.current)
+      selectTab(navPreviewRef.current)
       suppressNavClickUntilRef.current = currentTimestamp() + 350
       navigator.vibrate?.(10)
     }
@@ -225,7 +241,7 @@ function App() {
   return (
     <div className={`app-shell ${navGliding ? 'is-nav-gliding' : ''}`}>
       <header className="app-header">
-        <button className="brand-button" type="button" onClick={() => setActiveTab('log')} aria-label="返回记录首页">
+        <button className="brand-button" type="button" onClick={() => selectTab('log')} aria-label="返回记录首页">
           <span className="brand-mark">日</span>
           <span><strong>日迹</strong><small>仅保存在本机</small></span>
         </button>
@@ -234,9 +250,15 @@ function App() {
       <main className="app-main">
         <Suspense fallback={<div className="lazy-state">正在打开…</div>}>
           {selectedNavTab === 'log' && <QuickLogPage notify={notify} />}
-          {selectedNavTab === 'history' && <HistoryPage notify={notify} />}
+          {selectedNavTab === 'history' && <HistoryPage notify={notify} onOpenExport={openExportSettings} />}
           {selectedNavTab === 'statistics' && <StatisticsPage />}
-          {selectedNavTab === 'settings' && <SettingsPage notify={notify} />}
+          {selectedNavTab === 'settings' && (
+            <SettingsPage
+              notify={notify}
+              initialSection={settingsSection}
+              onInitialSectionHandled={clearSettingsSection}
+            />
+          )}
         </Suspense>
       </main>
 
@@ -261,7 +283,7 @@ function App() {
               className={selectedNavTab === item.id ? 'active' : ''}
               onClick={() => {
                 if (currentTimestamp() < suppressNavClickUntilRef.current) return
-                setActiveTab(item.id)
+                selectTab(item.id)
               }}
               aria-current={activeTab === item.id ? 'page' : undefined}
             >

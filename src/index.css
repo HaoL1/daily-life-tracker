@@ -416,6 +416,7 @@ h1, h2, h3, strong { overflow-wrap: anywhere; }
 .history-page { gap: 18px; }
 .history-heading { align-items: center; }
 .history-heading h1 { font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif; font-size: 25px; font-weight: 780; line-height: 1.15; }
+.history-heading-actions { display: flex; flex: 0 0 auto; gap: 8px; }
 .history-day > header { display: flex; margin-bottom: 8px; align-items: center; justify-content: space-between; }
 .history-day > header h2 { font-size: 15px; }
 .history-day-actions { display: flex; align-items: center; gap: 8px; }
@@ -563,6 +564,7 @@ input:disabled, select:disabled { background: var(--cp-surface-soft); color: var
 .settings-row-actions { gap: 3px; }
 
 .selection-summary { margin: 10px 0 14px; color: var(--cp-text-muted); font-size: 12px; }
+.export-section { scroll-margin-top: calc(88px + env(safe-area-inset-top)); }
 .export-custom-range { margin-top: 10px; }
 .action-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .action-button {

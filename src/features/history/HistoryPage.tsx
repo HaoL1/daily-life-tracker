@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowDown, ArrowUp, CalendarDays, ChevronRight, Plus } from 'lucide-react'
+import { ArrowDown, ArrowUp, CalendarDays, ChevronRight, Download, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { RecordEditor } from '../../components/RecordEditor'
 import { db } from '../../db/database'
@@ -24,11 +24,12 @@ const iconToneFallback: Partial<Record<ActivityRecord['activityIcon'], string>> 
 
 interface HistoryPageProps {
   notify: Notify
+  onOpenExport: () => void
 }
 
 type HistorySortOrder = 'ascending' | 'descending'
 
-export function HistoryPage({ notify }: HistoryPageProps) {
+export function HistoryPage({ notify, onOpenExport }: HistoryPageProps) {
   const records = useLiveQuery(() => db.records.orderBy('recordedAt').reverse().toArray(), [], [])
   const activities = useLiveQuery(() => db.activities.orderBy('sortOrder').toArray(), [], [])
   const [activityFilter, setActivityFilter] = useState('all')
@@ -59,10 +60,16 @@ export function HistoryPage({ notify }: HistoryPageProps) {
           <p className="eyebrow">时间线</p>
           <h1>历史记录</h1>
         </div>
-        <button className="primary-button compact-button" type="button" onClick={() => setEditor({})} disabled={!activities.length}>
-          <Plus size={18} />
-          补录
-        </button>
+        <div className="history-heading-actions">
+          <button className="secondary-button compact-button" type="button" onClick={onOpenExport}>
+            <Download size={17} />
+            导出
+          </button>
+          <button className="primary-button compact-button" type="button" onClick={() => setEditor({})} disabled={!activities.length}>
+            <Plus size={18} />
+            补录
+          </button>
+        </div>
       </header>
 
       <div className="filter-bar">
