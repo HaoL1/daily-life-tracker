@@ -8,7 +8,7 @@ import {
   Smartphone,
   Trash2,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ActivityEditor } from '../../components/ActivityEditor'
 import { db } from '../../db/database'
 import type { ActivityDefinition } from '../../domain/models'
@@ -24,14 +24,14 @@ import { DataExportPanel } from './DataExportPanel'
 interface SettingsPageProps {
   notify: Notify
   initialSection?: 'export' | null
-  onInitialSectionHandled?: () => void
 }
 
-export function SettingsPage({ notify, initialSection, onInitialSectionHandled }: SettingsPageProps) {
+export function SettingsPage({ notify, initialSection }: SettingsPageProps) {
   const activities = useLiveQuery(() => db.activities.orderBy('sortOrder').toArray(), [], [])
   const activeSessions = useLiveQuery(() => db.activeSessions.toArray(), [], [])
   const [editor, setEditor] = useState<ActivityDefinition | 'new' | null>(null)
   const [storage, setStorage] = useState<StorageStatus | null>(null)
+  const pageRef = useRef<HTMLDivElement>(null)
   const visible = activities.filter((activity) => !activity.isArchived)
   const deleted = activities.filter((activity) => activity.isArchived)
 
@@ -43,14 +43,28 @@ export function SettingsPage({ notify, initialSection, onInitialSectionHandled }
 
   useEffect(() => {
     if (initialSection !== 'export') return
-    const frame = window.requestAnimationFrame(() => {
-      const exportSection = document.getElementById('export-and-backup')
-      exportSection?.focus({ preventScroll: true })
-      exportSection?.scrollIntoView({ block: 'start' })
-      onInitialSectionHandled?.()
-    })
-    return () => window.cancelAnimationFrame(frame)
-  }, [initialSection, onInitialSectionHandled])
+    const exportSection = document.getElementById('export-and-backup')
+    if (!exportSection) return
+
+    let frame = 0
+    const alignExportSection = () => {
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(() => exportSection.scrollIntoView({ block: 'start' }))
+    }
+
+    exportSection.focus({ preventScroll: true })
+    alignExportSection()
+
+    const observer = new ResizeObserver(alignExportSection)
+    if (pageRef.current) observer.observe(pageRef.current)
+    const stopObserving = window.setTimeout(() => observer.disconnect(), 1200)
+
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.clearTimeout(stopObserving)
+      observer.disconnect()
+    }
+  }, [initialSection])
 
   async function remove(activity: ActivityDefinition) {
     const recordCount = await db.records.where('activityId').equals(activity.id).count()
@@ -92,7 +106,10 @@ export function SettingsPage({ notify, initialSection, onInitialSectionHandled }
   }
 
   return (
-    <div className="page settings-page">
+    <div
+      ref={pageRef}
+      className={`page settings-page ${initialSection === 'export' ? 'export-target-active' : ''}`}
+    >
       <header className="page-heading">
         <div><p className="eyebrow">你的日迹</p><h1>按自己的方式记录</h1><p className="heading-support">调整按钮、备份数据，也可以查看本机存储状态。</p></div>
       </header>

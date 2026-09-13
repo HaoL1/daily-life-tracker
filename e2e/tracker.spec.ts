@@ -143,8 +143,9 @@ test('opens export and backup directly from history', async ({ page }) => {
     .getByRole('button', { name: '设置', exact: true })).toHaveAttribute('aria-current', 'page')
   await expect(exportSection).toBeFocused()
   await expect.poll(async () => exportSection.evaluate((element) => {
-    const bounds = element.getBoundingClientRect()
-    return bounds.top >= 0 && bounds.top < window.innerHeight
+    const sectionTop = element.getBoundingClientRect().top
+    const headerBottom = document.querySelector('.app-header')?.getBoundingClientRect().bottom ?? 0
+    return sectionTop >= headerBottom && sectionTop <= headerBottom + 24
   })).toBe(true)
 })
 

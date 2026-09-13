@@ -2,7 +2,6 @@ import { BarChart3, Clock3, History, Settings } from 'lucide-react'
 import {
   lazy,
   Suspense,
-  useCallback,
   useEffect,
   useRef,
   useState,
@@ -86,8 +85,6 @@ function App() {
   const notify: Notify = (message, action) => {
     setNotice({ id: Date.now(), message, action })
   }
-
-  const clearSettingsSection = useCallback(() => setSettingsSection(null), [])
 
   function selectTab(tab: Tab) {
     setSettingsSection(null)
@@ -256,7 +253,6 @@ function App() {
             <SettingsPage
               notify={notify}
               initialSection={settingsSection}
-              onInitialSectionHandled={clearSettingsSection}
             />
           )}
         </Suspense>
