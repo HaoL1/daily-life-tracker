@@ -149,6 +149,45 @@ test('opens export and backup directly from history', async ({ page }) => {
   })).toBe(true)
 })
 
+test('keeps today and yesterday open while collapsing older history', async ({ page }) => {
+  const dates = await page.evaluate(() => {
+    const toInput = (date: Date) => {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}T09:00`
+    }
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(today.getDate() - 1)
+    const older = new Date(today)
+    older.setDate(today.getDate() - 2)
+    return { today: toInput(today), yesterday: toInput(yesterday), older: toInput(older) }
+  })
+
+  const addRecord = async (recordedAt: string, note: string) => {
+    await page.getByRole('button', { name: '历史', exact: true }).click()
+    await page.getByRole('button', { name: '补录' }).click()
+    await page.getByLabel('发生时间').fill(recordedAt)
+    await page.getByLabel('备注（可选）').fill(note)
+    await page.getByRole('button', { name: '保存记录' }).click()
+  }
+
+  await addRecord(dates.today, '今天的记录')
+  await addRecord(dates.yesterday, '昨天的记录')
+  await addRecord(dates.older, '更早的记录')
+
+  await expect(page.getByText('今天的记录')).toBeVisible()
+  await expect(page.getByText('昨天的记录')).toBeVisible()
+  await expect(page.getByText('更早的记录')).toHaveCount(0)
+
+  const expandOlder = page.getByRole('button', { name: /^展开.+的 1 条记录$/ })
+  await expect(expandOlder).toHaveAttribute('aria-expanded', 'false')
+  await expandOlder.click()
+  await expect(page.getByText('更早的记录')).toBeVisible()
+  await expect(page.getByRole('button', { name: /^收起.+的 1 条记录$/ })).toHaveAttribute('aria-expanded', 'true')
+})
+
 test('restores and permanently deletes activities from the deleted section', async ({ page }, testInfo) => {
   await page.getByRole('button', { name: '记录咖啡', exact: true }).click()
   await page.getByLabel('备注（可选）').fill('上午美式')

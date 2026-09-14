@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ArrowDown, ArrowUp, CalendarDays, ChevronRight, Download, Plus } from 'lucide-react'
+import { ArrowDown, ArrowUp, CalendarDays, ChevronDown, ChevronRight, Download, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { RecordEditor } from '../../components/RecordEditor'
 import { db } from '../../db/database'
@@ -35,7 +35,12 @@ export function HistoryPage({ notify, onOpenExport }: HistoryPageProps) {
   const [activityFilter, setActivityFilter] = useState('all')
   const [dateFilter, setDateFilter] = useState('')
   const [sortOrder, setSortOrder] = useState<HistorySortOrder>('descending')
+  const [expandedDates, setExpandedDates] = useState<Set<string>>(() => new Set())
   const [editor, setEditor] = useState<{ record?: ActivityRecord } | null>(null)
+  const todayKey = toDateInput(new Date())
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  const recentDateKeys = new Set([todayKey, toDateInput(yesterday)])
 
   const filteredRecords = records.filter((record) => {
     if (activityFilter !== 'all' && record.activityId !== activityFilter) return false
@@ -51,6 +56,15 @@ export function HistoryPage({ notify, onOpenExport }: HistoryPageProps) {
   async function handleDelete(record: ActivityRecord) {
     await deleteRecord(record.id)
     notify('记录已删除')
+  }
+
+  function toggleDate(date: string) {
+    setExpandedDates((current) => {
+      const next = new Set(current)
+      if (next.has(date)) next.delete(date)
+      else next.add(date)
+      return next
+    })
   }
 
   return (
@@ -82,7 +96,17 @@ export function HistoryPage({ notify, onOpenExport }: HistoryPageProps) {
         </label>
         <label className="compact-field date-filter">
           <span>日期</span>
-          <input type="date" value={dateFilter} onChange={(event) => setDateFilter(event.target.value)} />
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(event) => {
+              const nextDate = event.target.value
+              setDateFilter(nextDate)
+              if (nextDate) {
+                setExpandedDates((current) => new Set(current).add(nextDate))
+              }
+            }}
+          />
         </label>
         {(activityFilter !== 'all' || dateFilter) && (
           <button className="text-button clear-filter" type="button" onClick={() => { setActivityFilter('all'); setDateFilter('') }}>
@@ -93,55 +117,81 @@ export function HistoryPage({ notify, onOpenExport }: HistoryPageProps) {
 
       {grouped.size ? (
         <div className="history-groups">
-          {[...grouped.entries()].map(([date, dayRecords]) => (
-            <section className="history-day" key={date}>
-              <header>
-                <h2>{formatDateHeading(dayRecords[0].recordedAt)}</h2>
-                <div className="history-day-actions">
+          {[...grouped.entries()].map(([date, dayRecords]) => {
+            const heading = formatDateHeading(dayRecords[0].recordedAt)
+            const isOlderDate = !recentDateKeys.has(date)
+            const isExpanded = !isOlderDate || expandedDates.has(date)
+            const recordsId = `history-records-${date}`
+
+            return (
+              <section className={`history-day ${isExpanded ? '' : 'is-collapsed'}`} key={date}>
+                <header>
+                <div className="history-day-title">
+                  <h2>{heading}</h2>
                   <span>{dayRecords.length} 条</span>
-                  <button
-                    className="history-sort-button"
-                    type="button"
-                    onClick={() => setSortOrder((current) => current === 'ascending' ? 'descending' : 'ascending')}
-                    aria-label={sortOrder === 'ascending' ? '当前早到晚，切换为晚到早' : '当前晚到早，切换为早到晚'}
-                    title={sortOrder === 'ascending' ? '切换为晚到早' : '切换为早到晚'}
-                  >
-                    {sortOrder === 'ascending' ? <ArrowDown size={14} /> : <ArrowUp size={14} />}
-                    {sortOrder === 'ascending' ? '早→晚' : '晚→早'}
-                  </button>
                 </div>
-              </header>
-              <div className="record-list">
-                {[...dayRecords]
-                  .sort((left, right) => sortOrder === 'ascending'
-                    ? left.recordedAt.localeCompare(right.recordedAt)
-                    : right.recordedAt.localeCompare(left.recordedAt))
-                  .map((record) => {
-                  const activity = activities.find((item) => item.id === record.activityId)
-                  const tone = activity?.tone ?? iconToneFallback[record.activityIcon] ?? 'neutral'
-                  const detail = [
-                    record.durationSeconds ? formatDuration(record.durationSeconds) : `${record.amount}${record.unit}`,
-                    record.note,
-                  ].filter(Boolean).join(' · ')
-                  return (
+                <div className="history-day-actions">
+                  {isOlderDate && (
                     <button
-                      className="history-row"
+                      className="history-collapse-button"
                       type="button"
-                      key={record.id}
-                      onClick={() => setEditor({ record })}
-                      aria-label={`编辑${record.activityName}，${formatTime(record.recordedAt)}，${detail}`}
+                      onClick={() => toggleDate(date)}
+                      aria-expanded={isExpanded}
+                      aria-controls={recordsId}
+                      aria-label={`${isExpanded ? '收起' : '展开'}${heading}的 ${dayRecords.length} 条记录`}
                     >
-                      <time dateTime={record.recordedAt}>{formatTime(record.recordedAt)}</time>
-                      <span className={`history-marker tone-${tone}`} aria-hidden="true" />
-                      <strong>{record.activityName}</strong>
-                      <span className="history-detail">{detail}</span>
-                      <ChevronRight className="history-chevron" size={15} aria-hidden="true" />
+                      {isExpanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
+                      {isExpanded ? '收起' : '展开'}
                     </button>
-                  )
-                  })}
-              </div>
-            </section>
-          ))}
+                  )}
+                  {isExpanded && (
+                    <button
+                      className="history-sort-button"
+                      type="button"
+                      onClick={() => setSortOrder((current) => current === 'ascending' ? 'descending' : 'ascending')}
+                      aria-label={sortOrder === 'ascending' ? '当前早到晚，切换为晚到早' : '当前晚到早，切换为早到晚'}
+                      title={sortOrder === 'ascending' ? '切换为晚到早' : '切换为早到晚'}
+                    >
+                      {sortOrder === 'ascending' ? <ArrowDown size={14} /> : <ArrowUp size={14} />}
+                      {sortOrder === 'ascending' ? '早→晚' : '晚→早'}
+                    </button>
+                  )}
+                </div>
+                </header>
+                {isExpanded && (
+                <div className="record-list" id={recordsId}>
+                  {[...dayRecords]
+                    .sort((left, right) => sortOrder === 'ascending'
+                      ? left.recordedAt.localeCompare(right.recordedAt)
+                      : right.recordedAt.localeCompare(left.recordedAt))
+                    .map((record) => {
+                    const activity = activities.find((item) => item.id === record.activityId)
+                    const tone = activity?.tone ?? iconToneFallback[record.activityIcon] ?? 'neutral'
+                    const detail = [
+                      record.durationSeconds ? formatDuration(record.durationSeconds) : `${record.amount}${record.unit}`,
+                      record.note,
+                    ].filter(Boolean).join(' · ')
+                    return (
+                      <button
+                        className="history-row"
+                        type="button"
+                        key={record.id}
+                        onClick={() => setEditor({ record })}
+                        aria-label={`编辑${record.activityName}，${formatTime(record.recordedAt)}，${detail}`}
+                      >
+                        <time dateTime={record.recordedAt}>{formatTime(record.recordedAt)}</time>
+                        <span className={`history-marker tone-${tone}`} aria-hidden="true" />
+                        <strong>{record.activityName}</strong>
+                        <span className="history-detail">{detail}</span>
+                        <ChevronRight className="history-chevron" size={15} aria-hidden="true" />
+                      </button>
+                    )
+                    })}
+                </div>
+                )}
+              </section>
+            )
+          })}
         </div>
       ) : (
         <div className="empty-state large-empty">
