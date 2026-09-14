@@ -226,7 +226,8 @@ test('restores and permanently deletes activities from the deleted section', asy
   await expect(deleteButton).toBeVisible()
   page.once('dialog', async (dialog) => {
     expect(dialog.message()).toContain('已有 1 条历史记录会继续保留')
-    expect(dialog.message()).toContain('此操作无法撤销')
+    expect(dialog.message()).toContain('之后可在“设置 → 已删除”中恢复')
+    expect(dialog.message()).not.toContain('此操作无法撤销')
     await dialog.accept()
   })
   await deleteButton.click()

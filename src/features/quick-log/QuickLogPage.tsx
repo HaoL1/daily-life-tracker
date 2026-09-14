@@ -114,7 +114,7 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
     const historyMessage = recordCount
       ? `已有 ${recordCount} 条历史记录会继续保留。`
       : '这个行为还没有历史记录。'
-    if (!window.confirm(`从首页删除“${activity.name}”？\n\n${historyMessage}\n此操作无法撤销。`)) return
+    if (!window.confirm(`从首页删除“${activity.name}”？\n\n${historyMessage}\n之后可在“设置 → 已删除”中恢复。`)) return
 
     try {
       await deleteActivity(activity.id)
