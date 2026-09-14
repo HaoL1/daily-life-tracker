@@ -142,6 +142,12 @@ test('opens export and backup directly from history', async ({ page }) => {
   await expect(page.getByRole('navigation', { name: '主要导航' })
     .getByRole('button', { name: '设置', exact: true })).toHaveAttribute('aria-current', 'page')
   await expect(exportSection).toBeFocused()
+  const rangeSelect = page.getByLabel('范围')
+  await expect(rangeSelect.locator('option')).toHaveText([
+    '昨天', '今天', '昨天和今天', '本周', '本月', '今年', '全部记录', '自定义',
+  ])
+  await rangeSelect.selectOption('yesterdayAndToday')
+  await expect(rangeSelect).toHaveValue('yesterdayAndToday')
   await expect.poll(async () => exportSection.evaluate((element) => {
     const sectionTop = element.getBoundingClientRect().top
     const headerBottom = document.querySelector('.app-header')?.getBoundingClientRect().bottom ?? 0

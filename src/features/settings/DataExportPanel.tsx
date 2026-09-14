@@ -126,6 +126,7 @@ export function DataExportPanel({ notify }: DataExportPanelProps) {
           <select value={rangeType} onChange={(event) => setRangeType(event.target.value as ExportRange)}>
             <option value="yesterday">昨天</option>
             <option value="day">今天</option>
+            <option value="yesterdayAndToday">昨天和今天</option>
             <option value="week">本周</option>
             <option value="month">本月</option>
             <option value="year">今年</option>

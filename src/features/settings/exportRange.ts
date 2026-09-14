@@ -1,6 +1,6 @@
 import { getPeriodRange, type DateRange, type PeriodKind } from '../../services/statisticsService'
 
-export type ExportRange = PeriodKind | 'all' | 'yesterday'
+export type ExportRange = PeriodKind | 'all' | 'yesterday' | 'yesterdayAndToday'
 
 export function resolveRange(
   type: ExportRange,
@@ -13,6 +13,11 @@ export function resolveRange(
     const anchor = new Date(now)
     anchor.setDate(anchor.getDate() - 1)
     return getPeriodRange('day', anchor)
+  }
+  if (type === 'yesterdayAndToday') {
+    const yesterday = new Date(now)
+    yesterday.setDate(yesterday.getDate() - 1)
+    return getPeriodRange('custom', now, { start: yesterday, end: now })
   }
   if (type === 'all') {
     if (!records.length) return getPeriodRange('day', now)
