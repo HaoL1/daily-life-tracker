@@ -148,6 +148,13 @@ test('opens export and backup directly from history', async ({ page }) => {
   ])
   await rangeSelect.selectOption('yesterdayAndToday')
   await expect(rangeSelect).toHaveValue('yesterdayAndToday')
+  await rangeSelect.selectOption('custom')
+  await expect(page.getByLabel('开始')).toHaveAttribute('type', 'datetime-local')
+  await expect(page.getByLabel('结束')).toHaveAttribute('type', 'datetime-local')
+  await page.getByLabel('开始').fill('2026-09-13T08:15')
+  await page.getByLabel('结束').fill('2026-09-14T17:42')
+  await expect(page.locator('.selection-summary')).toContainText('08:15')
+  await expect(page.locator('.selection-summary')).toContainText('17:42')
   await expect.poll(async () => exportSection.evaluate((element) => {
     const sectionTop = element.getBoundingClientRect().top
     const headerBottom = document.querySelector('.app-header')?.getBoundingClientRect().bottom ?? 0

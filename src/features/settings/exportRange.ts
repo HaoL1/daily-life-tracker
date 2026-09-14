@@ -2,6 +2,15 @@ import { getPeriodRange, type DateRange, type PeriodKind } from '../../services/
 
 export type ExportRange = PeriodKind | 'all' | 'yesterday' | 'yesterdayAndToday'
 
+const chineseDateTime = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+})
+
 export function resolveRange(
   type: ExportRange,
   records: Array<{ recordedAt: string }>,
@@ -28,10 +37,20 @@ export function resolveRange(
     })
   }
   if (type === 'custom') {
-    return getPeriodRange('custom', now, {
-      start: new Date(`${customStart}T12:00:00`),
-      end: new Date(`${customEnd}T12:00:00`),
-    })
+    const start = new Date(customStart)
+    const selectedEnd = new Date(customEnd)
+    if (Number.isNaN(start.getTime()) || Number.isNaN(selectedEnd.getTime())) {
+      throw new Error('请选择有效的开始和结束时间')
+    }
+    if (selectedEnd < start) throw new Error('结束时间不能早于开始时间')
+
+    const end = new Date(selectedEnd)
+    end.setSeconds(59, 999)
+    return {
+      start,
+      end,
+      label: `${chineseDateTime.format(start)} 至 ${chineseDateTime.format(selectedEnd)}`,
+    }
   }
   return getPeriodRange(type, now)
 }

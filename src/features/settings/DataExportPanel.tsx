@@ -13,7 +13,7 @@ import {
 import {
   summarizeRecords,
 } from '../../services/statisticsService'
-import { toDateInput } from '../../utils/dateTime'
+import { toDateInput, toDateTimeInput } from '../../utils/dateTime'
 import { resolveRange, type ExportRange } from './exportRange'
 
 interface DataExportPanelProps {
@@ -26,8 +26,12 @@ export function DataExportPanel({ notify }: DataExportPanelProps) {
   const settings = useLiveQuery(() => db.settings.get('app'), [], undefined)
   const [rangeType, setRangeType] = useState<ExportRange>('day')
   const [activityId, setActivityId] = useState('all')
-  const [customStart, setCustomStart] = useState(toDateInput(new Date()))
-  const [customEnd, setCustomEnd] = useState(toDateInput(new Date()))
+  const [customStart, setCustomStart] = useState(() => {
+    const start = new Date()
+    start.setHours(0, 0, 0, 0)
+    return toDateTimeInput(start.toISOString())
+  })
+  const [customEnd, setCustomEnd] = useState(() => toDateTimeInput())
   const [working, setWorking] = useState(false)
   const importRef = useRef<HTMLInputElement>(null)
 
@@ -144,8 +148,33 @@ export function DataExportPanel({ notify }: DataExportPanelProps) {
       </div>
       {rangeType === 'custom' && (
         <div className="custom-range export-custom-range">
-          <label className="compact-field"><span>开始</span><input type="date" value={customStart} onChange={(event) => setCustomStart(event.target.value)} /></label>
-          <label className="compact-field"><span>结束</span><input type="date" min={customStart} value={customEnd} onChange={(event) => setCustomEnd(event.target.value)} /></label>
+          <label className="compact-field">
+            <span>开始</span>
+            <input
+              type="datetime-local"
+              required
+              value={customStart}
+              onChange={(event) => {
+                const nextStart = event.target.value
+                if (!nextStart) return
+                setCustomStart(nextStart)
+                if (nextStart > customEnd) setCustomEnd(nextStart)
+              }}
+            />
+          </label>
+          <label className="compact-field">
+            <span>结束</span>
+            <input
+              type="datetime-local"
+              required
+              min={customStart}
+              value={customEnd}
+              onChange={(event) => {
+                const nextEnd = event.target.value
+                if (nextEnd && nextEnd >= customStart) setCustomEnd(nextEnd)
+              }}
+            />
+          </label>
         </div>
       )}
       <p className="selection-summary">{range.label} · {selectedRecords.filter((record) => {
