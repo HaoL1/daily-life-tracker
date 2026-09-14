@@ -155,6 +155,9 @@ test('opens export and backup directly from history', async ({ page }) => {
   await page.getByLabel('结束').fill('2026-09-14T17:42')
   await expect(page.locator('.selection-summary')).toContainText('08:15')
   await expect(page.locator('.selection-summary')).toContainText('17:42')
+  expect(await page.evaluate(
+    () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+  )).toBe(true)
   await expect.poll(async () => exportSection.evaluate((element) => {
     const sectionTop = element.getBoundingClientRect().top
     const headerBottom = document.querySelector('.app-header')?.getBoundingClientRect().bottom ?? 0
