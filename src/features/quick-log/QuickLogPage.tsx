@@ -26,6 +26,7 @@ import { recordInstant, startTimer, stopTimer, undoRecord } from '../../services
 import { getPeriodRange } from '../../services/statisticsService'
 import { currentTimestamp, formatFullDate } from '../../utils/dateTime'
 import { SortableQuickCard } from './SortableQuickCard'
+import { TodayProgress } from './TodayProgress'
 
 interface QuickLogPageProps {
   notify: Notify
@@ -50,6 +51,12 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
     counts[record.activityId] = (counts[record.activityId] ?? 0) + 1
     return counts
   }, {})
+  const todayWaterAmount = todayRecords.reduce((total, record) => {
+    if (record.activityIcon !== 'water' || record.unit.toLowerCase() !== 'ml') return total
+    const amount = Number(record.amount.replace(',', '.'))
+    return Number.isFinite(amount) ? total + amount : total
+  }, 0)
+  const todayExerciseCount = todayRecords.filter((record) => record.activityIcon === 'exercise').length
   const [quickEntryActivity, setQuickEntryActivity] = useState<ActivityDefinition | null>(null)
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null)
   const [showGeneralEditor, setShowGeneralEditor] = useState(false)
@@ -150,6 +157,8 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
           </div>
         </section>
       )}
+
+      <TodayProgress waterAmount={todayWaterAmount} exerciseCount={todayExerciseCount} />
 
       <section aria-label="记录项目">
         {activities.length ? (

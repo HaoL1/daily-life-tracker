@@ -88,6 +88,8 @@ test('confirms measurements and notes before saving records', async ({ page }, t
   const waterCard = page.getByRole('button', { name: '记录喝水', exact: true })
   const exerciseCard = page.getByRole('button', { name: '记录锻炼', exact: true })
 
+  await expect(page.getByRole('img', { name: '今日已喝水 0 毫升，目标 2500 毫升' })).toBeVisible()
+  await expect(page.getByRole('img', { name: '今日锻炼 0 次，今天先躺平' })).toBeVisible()
   await expect(waterCard.getByText(/今日\s*0次/)).toBeVisible()
   await page.getByRole('button', { name: '记录喝水', exact: true }).click()
   await expect(page.getByRole('heading', { name: '记录喝水' })).toBeVisible()
@@ -98,6 +100,7 @@ test('confirms measurements and notes before saving records', async ({ page }, t
   await page.getByRole('button', { name: '确认记录' }).click()
   await expect(page.getByText('已记录 喝水 300 ml')).toBeVisible()
   await expect(waterCard.getByText(/今日\s*1次/)).toBeVisible()
+  await expect(page.getByRole('img', { name: '今日已喝水 300 毫升，目标 2500 毫升' })).toBeVisible()
 
   await expect(exerciseCard.getByText(/今日\s*0次/)).toBeVisible()
   await page.getByRole('button', { name: '记录锻炼', exact: true }).click()
@@ -113,6 +116,7 @@ test('confirms measurements and notes before saving records', async ({ page }, t
   await page.getByRole('button', { name: '结束并保存' }).click()
   await expect(page.getByText(/锻炼已结束/)).toBeVisible()
   await expect(exerciseCard.getByText(/今日\s*1次/)).toBeVisible()
+  await expect(page.getByRole('img', { name: '今日锻炼 1 次，兴奋起来了' })).toBeVisible()
 
   await page.getByRole('button', { name: '历史', exact: true }).click()
   await expect(page.getByRole('heading', { name: '历史记录' })).toBeVisible()
