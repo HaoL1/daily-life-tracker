@@ -10,7 +10,8 @@ interface SortableQuickCardProps {
   activity: ActivityDefinition
   session?: ActiveSession
   clock: number
-  todayCount: number
+  todayValue: number
+  todayUnit: '次' | '分钟'
   isSelected: boolean
   onOpen: () => void
   onSelect: () => void
@@ -22,7 +23,8 @@ export function SortableQuickCard({
   activity,
   session,
   clock,
-  todayCount,
+  todayValue,
+  todayUnit,
   isSelected,
   onOpen,
   onSelect,
@@ -103,8 +105,8 @@ export function SortableQuickCard({
           <span className={`quick-card-chip quick-card-status ${isRunning ? 'is-running' : ''}`}>
             {statusLabel}
           </span>
-          <span className="quick-card-chip quick-card-count" aria-label={`${activity.name}今天已完成${todayCount}次`}>
-            今日 {todayCount}次
+          <span className="quick-card-chip quick-card-count" aria-label={`${activity.name}今天累计${todayValue}${todayUnit}`}>
+            今日 {todayValue}{todayUnit}
           </span>
         </span>
         <span className="quick-card-body">

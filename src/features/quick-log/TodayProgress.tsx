@@ -2,15 +2,24 @@ const WATER_GOAL_ML = 2500
 
 interface TodayProgressProps {
   waterAmount: number
-  exerciseCount: number
+  exerciseMinutes: number
 }
 
 const exerciseLabels = ['今天先躺平', '兴奋起来了', '开始流汗了', '冲劲十足', '能量爆棚']
 
-export function TodayProgress({ waterAmount, exerciseCount }: TodayProgressProps) {
+function getExerciseLevel(minutes: number): number {
+  if (minutes >= 60) return 4
+  if (minutes >= 30) return 3
+  if (minutes >= 10) return 2
+  if (minutes >= 1) return 1
+  return 0
+}
+
+export function TodayProgress({ waterAmount, exerciseMinutes }: TodayProgressProps) {
   const normalizedWater = Math.max(0, waterAmount)
   const waterPercent = Math.min(100, (normalizedWater / WATER_GOAL_ML) * 100)
-  const exerciseLevel = Math.min(4, Math.max(0, exerciseCount))
+  const normalizedExerciseMinutes = Math.max(0, exerciseMinutes)
+  const exerciseLevel = getExerciseLevel(normalizedExerciseMinutes)
 
   return (
     <section className="today-progress" aria-label="今日饮水和锻炼进度">
@@ -37,7 +46,7 @@ export function TodayProgress({ waterAmount, exerciseCount }: TodayProgressProps
         <div
           className={`exercise-person exercise-level-${exerciseLevel}`}
           role="img"
-          aria-label={`今日锻炼 ${exerciseCount} 次，${exerciseLabels[exerciseLevel]}`}
+          aria-label={`今日锻炼 ${normalizedExerciseMinutes} 分钟，${exerciseLabels[exerciseLevel]}`}
         >
           <span className="person-spark spark-left">✦</span>
           <span className="person-spark spark-right">✦</span>
@@ -56,7 +65,7 @@ export function TodayProgress({ waterAmount, exerciseCount }: TodayProgressProps
         </div>
         <div className="progress-copy exercise-copy">
           <span>今日锻炼</span>
-          <strong>{exerciseCount} <small>次</small></strong>
+          <strong>{normalizedExerciseMinutes} <small>分钟</small></strong>
           <em>{exerciseLabels[exerciseLevel]}</em>
         </div>
       </div>

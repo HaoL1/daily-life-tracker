@@ -47,6 +47,7 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
     [todayRange.start.toISOString(), todayRange.end.toISOString()],
     [],
   )
+  const [clock, setClock] = useState(currentTimestamp)
   const todayRecordCounts = todayRecords.reduce<Record<string, number>>((counts, record) => {
     counts[record.activityId] = (counts[record.activityId] ?? 0) + 1
     return counts
@@ -56,11 +57,24 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
     const amount = Number(record.amount.replace(',', '.'))
     return Number.isFinite(amount) ? total + amount : total
   }, 0)
-  const todayExerciseCount = todayRecords.filter((record) => record.activityIcon === 'exercise').length
+  const todayExerciseSecondsByActivity = todayRecords.reduce<Record<string, number>>((totals, record) => {
+    if (record.activityIcon !== 'exercise') return totals
+    totals[record.activityId] = (totals[record.activityId] ?? 0) + (record.durationSeconds ?? 0)
+    return totals
+  }, {})
+  activeSessions.forEach((session) => {
+    if (session.activityIcon !== 'exercise') return
+    const startedAt = Math.max(new Date(session.startedAt).getTime(), todayRange.start.getTime())
+    const elapsedSeconds = Math.max(0, Math.floor((clock - startedAt) / 1000))
+    todayExerciseSecondsByActivity[session.activityId] =
+      (todayExerciseSecondsByActivity[session.activityId] ?? 0) + elapsedSeconds
+  })
+  const todayExerciseMinutes = Math.floor(
+    Object.values(todayExerciseSecondsByActivity).reduce((total, seconds) => total + seconds, 0) / 60,
+  )
   const [quickEntryActivity, setQuickEntryActivity] = useState<ActivityDefinition | null>(null)
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null)
   const [showGeneralEditor, setShowGeneralEditor] = useState(false)
-  const [clock, setClock] = useState(currentTimestamp)
   const suppressCardOpenUntil = useRef(0)
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
@@ -158,7 +172,7 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
         </section>
       )}
 
-      <TodayProgress waterAmount={todayWaterAmount} exerciseCount={todayExerciseCount} />
+      <TodayProgress waterAmount={todayWaterAmount} exerciseMinutes={todayExerciseMinutes} />
 
       <section aria-label="记录项目">
         {activities.length ? (
@@ -186,7 +200,12 @@ export function QuickLogPage({ notify }: QuickLogPageProps) {
                     activity={activity}
                     session={activeSessions.find((item) => item.activityId === activity.id)}
                     clock={clock}
-                    todayCount={todayRecordCounts[activity.id] ?? 0}
+                    todayValue={
+                      activity.icon === 'exercise'
+                        ? Math.floor((todayExerciseSecondsByActivity[activity.id] ?? 0) / 60)
+                        : todayRecordCounts[activity.id] ?? 0
+                    }
+                    todayUnit={activity.icon === 'exercise' ? '分钟' : '次'}
                     isSelected={selectedActivityId === activity.id}
                     onOpen={() => {
                       setSelectedActivityId(null)
