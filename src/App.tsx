@@ -240,7 +240,7 @@ function App() {
       <header className="app-header">
         <button className="brand-button" type="button" onClick={() => selectTab('log')} aria-label="返回记录首页">
           <span className="brand-mark">日</span>
-          <span><strong>日迹</strong><small>仅保存在本机</small></span>
+          <span><strong>日迹本</strong><small>仅保存在本机</small></span>
         </button>
       </header>
 

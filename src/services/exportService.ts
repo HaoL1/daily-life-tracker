@@ -104,7 +104,7 @@ export function createPlainText(
     : ['暂无记录']
 
   return [
-    '日迹 · 生活记录',
+    '日迹本 · 生活记录',
     `范围：${range.label}`,
     `生成时间：${localDateTime.format(new Date())}`,
     '',

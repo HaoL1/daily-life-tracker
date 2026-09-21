@@ -68,7 +68,7 @@ export function DataExportPanel({ notify }: DataExportPanelProps) {
       return
     }
     try {
-      await navigator.share({ title: '日迹 · 生活记录', text })
+      await navigator.share({ title: '日迹本 · 生活记录', text })
     } catch (caught) {
       if (caught instanceof DOMException && caught.name === 'AbortError') return
       notify('分享失败，请改用复制或下载')
@@ -79,7 +79,7 @@ export function DataExportPanel({ notify }: DataExportPanelProps) {
     const backup = await createBackup()
     downloadTextFile(
       JSON.stringify(backup, null, 2),
-      `日迹-${label}-${dateStamp}.json`,
+      `日迹本-${label}-${dateStamp}.json`,
       'application/json;charset=utf-8',
     )
     notify('完整备份已下载，请保存到“文件”中')
@@ -100,7 +100,7 @@ export function DataExportPanel({ notify }: DataExportPanelProps) {
       const currentBackup = await createBackup()
       downloadTextFile(
         JSON.stringify(currentBackup, null, 2),
-        `日迹-恢复前自动备份-${dateStamp}.json`,
+        `日迹本-恢复前自动备份-${dateStamp}.json`,
         'application/json;charset=utf-8',
       )
       await restoreBackup(backup)
@@ -190,13 +190,13 @@ export function DataExportPanel({ notify }: DataExportPanelProps) {
           <Share2 size={20} /><span><strong>系统分享</strong><small>发送完整文字记录</small></span>
         </button>
         <button className="action-button" type="button" onClick={() => {
-          downloadTextFile(createRecordsCsv(selectedRecords, range), `日迹-明细-${dateStamp}.csv`, 'text/csv;charset=utf-8')
+          downloadTextFile(createRecordsCsv(selectedRecords, range), `日迹本-明细-${dateStamp}.csv`, 'text/csv;charset=utf-8')
           notify('记录明细 CSV 已下载')
         }}>
           <FileSpreadsheet size={20} /><span><strong>明细表格</strong><small>CSV，可用 Excel 打开</small></span>
         </button>
         <button className="action-button" type="button" onClick={() => {
-          downloadTextFile(createSummaryCsv(summaries, range.label), `日迹-汇总-${dateStamp}.csv`, 'text/csv;charset=utf-8')
+          downloadTextFile(createSummaryCsv(summaries, range.label), `日迹本-汇总-${dateStamp}.csv`, 'text/csv;charset=utf-8')
           notify('统计汇总 CSV 已下载')
         }}>
           <Download size={20} /><span><strong>汇总表格</strong><small>按行为和单位汇总</small></span>

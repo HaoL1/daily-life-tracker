@@ -111,7 +111,7 @@ export function SettingsPage({ notify, initialSection }: SettingsPageProps) {
       className={`page settings-page ${initialSection === 'export' ? 'export-target-active' : ''}`}
     >
       <header className="page-heading">
-        <div><p className="eyebrow">你的日迹</p><h1>按自己的方式记录</h1><p className="heading-support">调整按钮、备份数据，也可以查看本机存储状态。</p></div>
+        <div><p className="eyebrow">你的日迹本</p><h1>按自己的方式记录</h1><p className="heading-support">调整按钮、备份数据，也可以查看本机存储状态。</p></div>
       </header>
 
       <section className="privacy-band">

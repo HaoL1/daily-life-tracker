@@ -1,44 +1,44 @@
 <p align="center">
-  <a href="https://haol1.github.io/daily-life-tracker/">
-    <img src="./public/app-icon.svg" width="96" height="96" alt="日迹 App 图标">
+  <a href="https://haol1.github.io/rijiben/">
+    <img src="./public/app-icon.svg" width="96" height="96" alt="日迹本 App 图标">
   </a>
 </p>
 
-<h1 align="center">日迹</h1>
+<h1 align="center">日迹本</h1>
 
 <p align="center">
   本机优先、可离线使用的个人生活记录 PWA
 </p>
 
 <p align="center">
-  <a href="https://haol1.github.io/daily-life-tracker/"><strong>在线使用</strong></a>
+  <a href="https://haol1.github.io/rijiben/"><strong>在线使用</strong></a>
   ·
-  <a href="https://github.com/HaoL1/daily-life-tracker/issues">功能规划</a>
+  <a href="https://github.com/HaoL1/rijiben/issues">功能规划</a>
   ·
-  <a href="https://github.com/HaoL1/daily-life-tracker/actions">构建记录</a>
+  <a href="https://github.com/HaoL1/rijiben/actions">构建记录</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/HaoL1/daily-life-tracker/actions/workflows/deploy-pages.yml">
-    <img src="https://github.com/HaoL1/daily-life-tracker/actions/workflows/deploy-pages.yml/badge.svg" alt="构建与部署状态">
+  <a href="https://github.com/HaoL1/rijiben/actions/workflows/deploy-pages.yml">
+    <img src="https://github.com/HaoL1/rijiben/actions/workflows/deploy-pages.yml/badge.svg" alt="构建与部署状态">
   </a>
 </p>
 
-日迹是一款为 iPhone 主屏幕设计的个人生活记录工具。它适合快速记录喝水、饮食、如厕、锻炼、开车等行为的时间、计量和备注，并通过时间线、统计和导出功能帮助用户回顾自己的日常节奏。
+日迹本是一款为 iPhone 主屏幕设计的个人生活记录工具。它适合快速记录喝水、饮食、如厕、锻炼、开车等行为的时间、计量和备注，并通过时间线、统计和导出功能帮助用户回顾自己的日常节奏。
 
 **不需要注册账号，也没有业务后端。所有记录默认只保存在当前设备的 IndexedDB 中。**
 
 ## 快速开始
 
-正式地址：**[https://haol1.github.io/daily-life-tracker/](https://haol1.github.io/daily-life-tracker/)**
+正式地址：**[https://haol1.github.io/rijiben/](https://haol1.github.io/rijiben/)**
 
 ### 安装到 iPhone
 
 1. 使用 iPhone 的 **Safari** 打开正式地址。
 2. 点击 Safari 工具栏中的“分享”。
 3. 选择“添加到主屏幕”。
-4. 名称保留为“日迹”，点击“添加”。
-5. 从主屏幕打开日迹；首次加载完成后即可离线使用。
+4. 名称保留为“日迹本”，点击“添加”。
+5. 从主屏幕打开日迹本；首次加载完成后即可离线使用。
 
 发布新版本后，应用会显示“新版本已准备好”。点击“更新”只替换应用文件，不会主动删除本地记录。
 
@@ -100,7 +100,7 @@
 
 ## 数据与隐私
 
-日迹采用 **local-first** 设计：
+日迹本采用 **local-first** 设计：
 
 - 没有用户账号、业务服务器或广告追踪。
 - 行为、记录、计时会话和设置保存在当前浏览器的 IndexedDB 中。
@@ -112,7 +112,7 @@
 
 > CSV、复制文字和系统分享不是完整备份。只有 JSON 备份包含行为定义、历史记录、计时会话和应用设置，可用于完整恢复。
 
-恢复 JSON 时，日迹会先自动下载一份“恢复前备份”，再用导入内容替换当前本地数据。
+恢复 JSON 时，日迹本会先自动下载一份“恢复前备份”，再用导入内容替换当前本地数据。
 
 ## 本地开发
 
@@ -125,8 +125,8 @@
 ### 启动项目
 
 ```powershell
-git clone https://github.com/HaoL1/daily-life-tracker.git
-cd daily-life-tracker
+git clone https://github.com/HaoL1/rijiben.git
+cd rijiben
 npm ci
 npm run dev
 ```
@@ -188,7 +188,7 @@ public/                 PWA 图标与静态资源
 
 本地测试覆盖日期范围、统计汇总、CSV、备份恢复、计量校验，以及记录、计时、历史、行为删除、拖动排序、软键盘和底栏手势等主要流程。
 
-推送到 `main` 后，[GitHub Actions](https://github.com/HaoL1/daily-life-tracker/actions/workflows/deploy-pages.yml) 会自动执行：
+推送到 `main` 后，[GitHub Actions](https://github.com/HaoL1/rijiben/actions/workflows/deploy-pages.yml) 会自动执行：
 
 1. `npm ci`
 2. `npm run lint`
@@ -202,12 +202,12 @@ Playwright 端到端测试当前在本地运行，不属于 Pages 工作流的�
 
 以下内容已记录为公开 Issue，便于未来分别验证和排期；它们目前都不代表已经承诺实现：
 
-- [#1 使用 OneDrive 实现可选的自动备份与恢复](https://github.com/HaoL1/daily-life-tracker/issues/1)
-- [#2 通过系统分享向 Copilot Cowork 交接今日记录与图片](https://github.com/HaoL1/daily-life-tracker/issues/2)
-- [#3 在日迹中提供双向 AI Chat 与 HTML 结果预览](https://github.com/HaoL1/daily-life-tracker/issues/3)
-- [#4 从 Apple Health 导出 ZIP 中仅提取睡眠数据](https://github.com/HaoL1/daily-life-tracker/issues/4)
-- [#5 使用 Apple 快捷指令桥接健康、文字与图片输入](https://github.com/HaoL1/daily-life-tracker/issues/5)
-- [#6 开发原生 iOS 伴侣以接入 HealthKit 与真实触感](https://github.com/HaoL1/daily-life-tracker/issues/6)
+- [#1 使用 OneDrive 实现可选的自动备份与恢复](https://github.com/HaoL1/rijiben/issues/1)
+- [#2 通过系统分享向 Copilot Cowork 交接今日记录与图片](https://github.com/HaoL1/rijiben/issues/2)
+- [#3 在日迹本中提供双向 AI Chat 与 HTML 结果预览](https://github.com/HaoL1/rijiben/issues/3)
+- [#4 从 Apple Health 导出 ZIP 中仅提取睡眠数据](https://github.com/HaoL1/rijiben/issues/4)
+- [#5 使用 Apple 快捷指令桥接健康、文字与图片输入](https://github.com/HaoL1/rijiben/issues/5)
+- [#6 开发原生 iOS 伴侣以接入 HealthKit 与真实触感](https://github.com/HaoL1/rijiben/issues/6)
 
 ## 当前平台限制
 
@@ -216,4 +216,4 @@ Playwright 端到端测试当前在本地运行，不属于 Pages 工作流的�
 - PWA 完全关闭后无法保证后台运行、实时上传或自动同步。
 - 当前版本没有跨设备同步；每个浏览器或安装实例的数据相互独立。
 
-功能建议和问题反馈可以提交到 [GitHub Issues](https://github.com/HaoL1/daily-life-tracker/issues)。提交公开 Issue 时，请勿附带个人健康记录、身份信息或其他敏感数据。
+功能建议和问题反馈可以提交到 [GitHub Issues](https://github.com/HaoL1/rijiben/issues)。提交公开 Issue 时，请勿附带个人健康记录、身份信息或其他敏感数据。
