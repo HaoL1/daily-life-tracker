@@ -34,7 +34,8 @@ export function QuickEntryModal({
   onClose,
   onConfirm,
 }: QuickEntryModalProps) {
-  const [amount, setAmount] = useState(session?.amount ?? activity.defaultAmount)
+  const defaultAmount = session?.amount ?? activity.defaultAmount
+  const [amount, setAmount] = useState('')
   const [note, setNote] = useState(session?.note ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -46,7 +47,7 @@ export function QuickEntryModal({
     setSaving(true)
     setError('')
     try {
-      await onConfirm({ amount, note })
+      await onConfirm({ amount: amount.trim() || defaultAmount, note })
       onClose()
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : '保存失败，请重试')
@@ -78,8 +79,9 @@ export function QuickEntryModal({
           <label className="field field-grow">
             <span>计量</span>
             <input
+              className="amount-default-input"
               inputMode="decimal"
-              required
+              placeholder={defaultAmount}
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
             />

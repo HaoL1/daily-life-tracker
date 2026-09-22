@@ -736,6 +736,7 @@ h1, h2, h3, strong { overflow-wrap: anywhere; }
 input, select, textarea { width: 100%; border: 1px solid var(--cp-border); border-radius: 8px; background: var(--cp-surface); color: var(--cp-text); }
 input, select { height: 44px; padding: 0 11px; }
 textarea { min-height: 88px; padding: 10px 11px; resize: vertical; }
+.amount-default-input::placeholder { color: var(--cp-text-muted); opacity: 0.62; }
 input:focus, select:focus, textarea:focus { border-color: var(--cp-accent); }
 input:disabled, select:disabled { background: var(--cp-surface-soft); color: var(--cp-text-muted); }
 .clear-filter { flex: 0 0 auto; }

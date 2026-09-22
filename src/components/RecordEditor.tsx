@@ -24,7 +24,7 @@ export function RecordEditor({
   const initialActivity =
     activities.find((item) => item.id === (record?.activityId ?? initialActivityId)) ?? activities[0]
   const [activityId, setActivityId] = useState(record?.activityId ?? initialActivity?.id ?? '')
-  const [amount, setAmount] = useState(record?.amount ?? initialActivity?.defaultAmount ?? '1')
+  const [amount, setAmount] = useState(record?.amount ?? '')
   const [recordedAt, setRecordedAt] = useState(toDateTimeInput(record?.recordedAt))
   const [startedAt, setStartedAt] = useState(
     toDateTimeInput(record?.startedAt ?? minutesAgoIso(30)),
@@ -69,7 +69,7 @@ export function RecordEditor({
       } else {
         await createRecordFromDraft({
           activityId,
-          amount,
+          amount: amount.trim() || selectedActivity.defaultAmount,
           recordedAt:
             recordMode === 'timer' ? inputToIso(endedAt) : inputToIso(recordedAt),
           note,
@@ -115,7 +115,7 @@ export function RecordEditor({
               const nextId = event.target.value
               const nextActivity = activities.find((item) => item.id === nextId)
               setActivityId(nextId)
-              if (nextActivity) setAmount(nextActivity.defaultAmount)
+              if (nextActivity) setAmount('')
             }}
           >
             {record && !activities.some((activity) => activity.id === record.activityId) && (
@@ -133,8 +133,10 @@ export function RecordEditor({
           <label className="field field-grow">
             <span>数量</span>
             <input
+              className={record ? undefined : 'amount-default-input'}
               inputMode="decimal"
-              required
+              required={Boolean(record)}
+              placeholder={record ? undefined : selectedActivity?.defaultAmount}
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
             />
