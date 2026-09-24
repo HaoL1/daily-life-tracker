@@ -48,7 +48,17 @@ export function TodayProgress({ waterAmount, exerciseMinutes }: TodayProgressPro
           role="img"
           aria-label={`今日锻炼 ${normalizedExerciseMinutes} 分钟，${exerciseLabels[exerciseLevel]}`}
         >
-          <span className="meditation-ground" />
+          <svg className="meditation-person" viewBox="0 0 112 132" aria-hidden="true">
+            <ellipse className="meditation-shadow" cx="56" cy="121" rx="50" ry="9" />
+            <path className="meditation-leg" d="M49 91c-8 5-17 12-26 21-4 4-2 11 4 12 12 2 24-1 36-8" />
+            <path className="meditation-leg" d="M63 91c8 5 17 12 26 21 4 4 2 11-4 12-12 2-24-1-36-8" />
+            <path className="meditation-torso" d="M40 48c4-5 28-5 32 0l5 42c-12 8-30 8-42 0z" />
+            <path className="meditation-arm" d="M40 56c-6 7-10 17-12 29-1 6 2 11 8 13l20 7" />
+            <path className="meditation-arm" d="M72 56c6 7 10 17 12 29 1 6-2 11-8 13l-20 7" />
+            <path className="meditation-hand" d="M45 102c7-2 15-2 22 0-3 7-19 7-22 0z" />
+            <circle className="meditation-head" cx="56" cy="28" r="20" />
+            <path className="meditation-face" d="M45 27h7M60 27h7M51 36c3 2 7 2 10 0" />
+          </svg>
           <span className="person-spark spark-left">✦</span>
           <span className="person-spark spark-right">✦</span>
           <span className="sweat-drop sweat-one" />
