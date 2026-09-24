@@ -390,6 +390,16 @@ h1, h2, h3, strong { overflow-wrap: anywhere; }
   color: var(--cp-accent);
   transform-origin: 50% 90%;
 }
+.meditation-ground {
+  position: absolute;
+  right: 4px;
+  bottom: 2px;
+  left: 4px;
+  display: none;
+  height: 18px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--cp-accent) 18%, transparent);
+}
 .person-head, .person-body, .person-arm, .person-leg { position: absolute; display: block; }
 .person-head {
   z-index: 3;
@@ -466,11 +476,28 @@ h1, h2, h3, strong { overflow-wrap: anywhere; }
 .sweat-one { top: 23px; right: 19px; }
 .sweat-two { top: 44px; right: 8px; animation-delay: .32s; }
 .exercise-level-0 {
-  top: 42px;
   animation: person-breathe 3.2s ease-in-out infinite;
-  transform: rotate(82deg) translateY(5px);
 }
+.exercise-level-0 .meditation-ground { display: block; }
+.exercise-level-0 .person-head { top: 2px; }
 .exercise-level-0 .person-eye { top: 16px; width: 7px; height: 2px; border-radius: 0; }
+.exercise-level-0 .person-mouth {
+  bottom: 6px;
+  height: 4px;
+  border-top: 0;
+  border-bottom-color: #533326;
+}
+.exercise-level-0 .person-body {
+  top: 43px;
+  height: 43px;
+  border-radius: 16px 16px 18px 18px;
+}
+.exercise-level-0 .person-arm { top: 52px; height: 43px; }
+.exercise-level-0 .arm-left { left: 31px; transform: rotate(-55deg); }
+.exercise-level-0 .arm-right { right: 30px; transform: rotate(55deg); }
+.exercise-level-0 .person-leg { top: 82px; height: 48px; }
+.exercise-level-0 .leg-left { left: 45px; transform: rotate(62deg); }
+.exercise-level-0 .leg-right { right: 44px; transform: rotate(-62deg); }
 .exercise-level-1 { animation: person-bounce .8s ease-in-out infinite; }
 .exercise-level-1 .person-spark { display: block; animation: spark-pop 1.2s ease-in-out infinite; }
 .exercise-level-1 .arm-left { transform: rotate(145deg); }
@@ -485,8 +512,8 @@ h1, h2, h3, strong { overflow-wrap: anywhere; }
   animation-duration: .3s;
 }
 @keyframes person-breathe {
-  0%, 100% { transform: rotate(82deg) translateY(5px) scale(1); }
-  50% { transform: rotate(82deg) translateY(5px) scale(1.025); }
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-2px) scale(1.025); }
 }
 @keyframes person-bounce {
   0%, 100% { transform: translateY(0) rotate(-2deg); }

@@ -5,7 +5,7 @@ interface TodayProgressProps {
   exerciseMinutes: number
 }
 
-const exerciseLabels = ['今天先躺平', '兴奋起来了', '开始流汗了', '冲劲十足', '能量爆棚']
+const exerciseLabels = ['打坐休息中', '兴奋起来了', '开始流汗了', '冲劲十足', '能量爆棚']
 
 function getExerciseLevel(minutes: number): number {
   if (minutes >= 60) return 4
@@ -48,6 +48,7 @@ export function TodayProgress({ waterAmount, exerciseMinutes }: TodayProgressPro
           role="img"
           aria-label={`今日锻炼 ${normalizedExerciseMinutes} 分钟，${exerciseLabels[exerciseLevel]}`}
         >
+          <span className="meditation-ground" />
           <span className="person-spark spark-left">✦</span>
           <span className="person-spark spark-right">✦</span>
           <span className="sweat-drop sweat-one" />
